@@ -8,9 +8,6 @@ import os
 period = 300
 speed = 5
 
-#player_starting_y = height - 200
-
-
 path = "C:/Users/Łuki/GSR/GSR_game/Data_project/"
 port_name = 'COM7'
 phase = 'control'
@@ -31,8 +28,8 @@ while run:
     game_instance.spawn_enemies()
     game_instance.move_objects(keys)
     game_instance.draw_objects()
+    #game_instance.change_difficulty(5,0.01) #!!!!!!!!!!!!!!!!!!! jest 5,0.01 teraz, jak odkomentujecie i zmienicie to bedzie hardcore
     pygame.display.update()
     #if game.instance.time % 100 == 0:
         #data_acquisition.get_data()
-    #time += 1
     pygame.time.delay(10)

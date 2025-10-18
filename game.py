@@ -10,6 +10,7 @@ class Game:
         self.time = 0
         self.enemies = []
         self.bullets = []
+        self.bullet_targeting = 0.01
         self.HP = 3
         info = pygame.display.Info()
         self.width = info.current_w
@@ -51,6 +52,10 @@ class Game:
         for bullet in self.bullets:
             pygame.draw.rect(self.surface, (0, 0, 255), bullet.hitbox)
         self.display_HP()
+
+    def change_difficulty(self,speed,bullet_targeting):
+        self.speed = speed
+        self.bullet_targeting = bullet_targeting
 
     class Enemy:
         def __init__(self,game_instance, x, y):
@@ -95,8 +100,8 @@ class Game:
             self.to_delete = False
 
         def move(self):
-            self.speed_x = 0.985 * self.speed_x + 0.015*(self.game_instance.player.hitbox.x - self.hitbox.x)
-            self.speed_y = 0.985 * self.speed_y + 0.015*(self.game_instance.player.hitbox.y - self.hitbox.y)
+            self.speed_x = (1-self.game_instance.bullet_targeting) * self.speed_x + self.game_instance.bullet_targeting*(self.game_instance.player.hitbox.x - self.hitbox.x)
+            self.speed_y = (1-self.game_instance.bullet_targeting) * self.speed_y + self.game_instance.bullet_targeting*(self.game_instance.player.hitbox.y - self.hitbox.y)
             self.normalizer = 2*self.game_instance.speed / (math.sqrt(self.speed_x ** 2 + self.speed_y ** 2) + 1)
             self.direction = (int(self.normalizer * self.speed_x), int(self.normalizer * self.speed_y))
 
