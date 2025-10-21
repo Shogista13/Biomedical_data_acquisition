@@ -33,6 +33,12 @@ class Game:
         textRect.center = (self.width - textRect.width//2-50, textRect.height//2 + 50)
         self.surface.blit(text,textRect)
 
+    def display_time(self):
+        text = self.font.render(f'Time: {self.time // 100}', True, (0, 0, 0))
+        textRect = text.get_rect()
+        textRect.center = (self.width - textRect.width // 2 - 50, textRect.height // 2 + 140)
+        self.surface.blit(text, textRect)
+
     def spawn_enemies(self):
         if self.time % self.period == 0 and len(self.enemies) < self.max_enemies:
             self.enemies.append(Game.Enemy(self,random.randint(50, self.width - 50), random.randint(self.enemies_boundary, self.enemies_boundary + self.height//2)))
@@ -63,6 +69,7 @@ class Game:
             pygame.draw.rect(self.surface, (0, 102, 0), bullet.hitbox)
         pygame.draw.rect(self.surface, (212, 175, 55), self.player.hitbox)
         self.display_HP()
+        self.display_time()
 
     def change_difficulty(self,speed,bullet_targeting,bullet_relative_speed):
         self.speed = speed
@@ -119,13 +126,17 @@ class Game:
             self.direction = (int(self.normalizer * self.speed_x), int(self.normalizer * self.speed_y))
             self.hitbox.move_ip(*self.direction)
             self.delete()
-            self.checK_for_collisions()
+            self.check_for_collisions()
 
         def delete(self):
-            if self.game_instance.time-self.spawn_time == 500:
+            #if self.game_instance.time-self.spawn_time == 500:
+                #self.to_delete = True
+            if not (0 < self.hitbox.x <= self.game_instance.width) :
+                self.to_delete = True
+            if not (0 < self.hitbox.y <= self.game_instance.height) :
                 self.to_delete = True
 
-        def checK_for_collisions(self):
+        def check_for_collisions(self):
             if self.hitbox.colliderect(self.game_instance.player.hitbox):
                 self.game_instance.HP -= 1
                 self.to_delete = True
@@ -168,6 +179,7 @@ class Game:
                 bullet_y = self.hitbox.y + (self.hitbox.height - 25) // 2
                 self.game_instance.player_bullets.append(Game.PlayerBullet(self.game_instance,bullet_x, bullet_y))
 
+
     class PowerUp:
         def __init__(self,game_instance):
             self.game_instance = game_instance
@@ -182,11 +194,11 @@ class Game:
                 self.time_since_last_collection = self.game_instance.time
                 self.game_instance.bullet_targeting += 0.025
                 self.game_instance.bullet_relative_speed += 0.2
-                self.game_instance.period -= 50
-            elif not self.exists and self.game_instance.time - self.time_since_last_collection == 600:
+                self.game_instance.period -= 35
+            elif not self.exists and self.game_instance.time - self.time_since_last_collection == 500:
                 self.game_instance.bullet_targeting -= 0.025
                 self.game_instance.bullet_relative_speed -= 0.2
-                self.game_instance.period += 50
+                self.game_instance.period += 35
             elif not self.exists and self.game_instance.time - self.time_since_last_collection == 1000:
                 self.exists = True
 
@@ -223,6 +235,10 @@ class Game:
 
         def delete(self):
             if self.game_instance.time-self.spawn_time == 500:
+                self.to_delete = True
+            if not (0 < self.hitbox.x <= self.game_instance.width) :
+                self.to_delete = True
+            if not (0 < self.hitbox.y <= self.game_instance.height) :
                 self.to_delete = True
 
         def checK_for_collisions(self):

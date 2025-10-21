@@ -7,19 +7,16 @@ def get_skin_conductance(signal):
     return (5 - voltage) / (10 * voltage)
 
 class Data:
-    def __init__(self,path,port_name,phase):
+    def __init__(self,path,phase):
         self.phase = phase
         self.path = path
         column_titles = ["HP", "Power up","Player x", "Player y", "Player speed_x", "Player speed_y", "Player bullet x", "Player bullet y", "Player bullet speed_x",
                          "Player bullet speed_y",'Enemy x', "Enemy y","Enemy speed_x", "Enemy speed_y", "Enemy bullet x", "Enemy bullet y",
                          "Enemy bullet speed_x", "Enemy bullet speed_y", "Humidity", "Temperature", "Skin conductance", "Relative_blood_volume"]
-        self.number = len(os.listdir(path))
+        self.number = len(os.listdir(path+'/'+phase))
         self.df = pd.DataFrame(columns=column_titles)
-        self.port = serial.Serial(port_name, 9600)
 
-    def get_data(self,player,enemies,enemy_bullets, player_bullets,HP,power_up):
-        data = self.port.readline().decode('utf-8').strip()
-        data_splitted = data.split(",")
+    def get_data(self,sensor_data,player,enemies,enemy_bullets, player_bullets,HP,power_up):
         player_x = player.hitbox.x
         player_y = player.hitbox.y
         player_speed_x = player.direction[0]
@@ -29,17 +26,17 @@ class Data:
         player_bullet_speed_x = [bullet.direction[0] for bullet in player_bullets]
         player_bullet_speed_y = [bullet.direction[1] for bullet in player_bullets]
         enemy_x = [enemy.hitbox.x for enemy in enemies]
-        enemy_y = [enemy.hitbox.xy for enemy in enemies]
+        enemy_y = [enemy.hitbox.x for enemy in enemies]
         enemy_speed_x = [enemy.speed_x for enemy in enemies]
         enemy_speed_y = [enemy.speed_y for enemy in enemies]
         enemy_bullet_x = [bullet.hitbox.x for bullet in enemy_bullets]
         enemy_bullet_y = [bullet.hitbox.y for bullet in enemy_bullets]
         enemy_bullet_speed_x = [bullet.direction[0] for bullet in enemy_bullets]
         enemy_bullet_speed_y = [bullet.direction[1] for bullet in enemy_bullets]
-        humidity = data_splitted[0]
-        temperature = data_splitted[1]
-        skin_conductance = get_skin_conductance(data_splitted[2])
-        relative_blood_volume = data_splitted[3]
+        humidity = sensor_data[0]
+        temperature = sensor_data[1]
+        skin_conductance = get_skin_conductance(sensor_data[2])
+        relative_blood_volume = sensor_data[3]
         self.df.loc[len(self.df)] = [HP,power_up, player_x, player_y, player_speed_x, player_speed_y,player_bullet_x,player_bullet_y,
                                      player_bullet_speed_x,player_bullet_speed_y,enemy_x, enemy_y, enemy_speed_x,
                            enemy_speed_y, enemy_bullet_x, enemy_bullet_y, enemy_bullet_speed_x, enemy_bullet_speed_y, humidity, temperature,
@@ -47,4 +44,4 @@ class Data:
 
     def save_data(self):
         global df, path, number
-        pd.DataFrame.to_csv(self.df, self.path + self.phase + '/subject' + str(self.number))
+        pd.DataFrame.to_csv(self.df, self.path +"/" + self.phase + '/subject' + str(self.number))
