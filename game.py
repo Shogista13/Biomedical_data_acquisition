@@ -3,7 +3,7 @@ import random
 import math
 
 class Game:
-    def __init__(self,period,speed,HP,bullet_relative_speed,bullet_targeting):
+    def __init__(self,period,speed,HP,bullet_relative_speed,bullet_targeting,power_up_strenght):
         pygame.init()
         pygame.font.init()
         self.font = pygame.font.Font(None, 80)
@@ -25,6 +25,7 @@ class Game:
         self.speed = speed
         self.player = Game.Player(self)
         self.power_up = Game.PowerUp(self)
+        self.power_up_strenght = power_up_strenght
         self.enemies_boundary = self.height // 2
 
     def display_HP(self):
@@ -190,15 +191,15 @@ class Game:
         def spawn_or_collect(self):
             if self.hitbox.colliderect(self.game_instance.player.hitbox) and self.exists:
                 self.exists = False
-                self.game_instance.HP += 1
+                self.game_instance.HP += self.game_instance.power_up_strenght
                 self.time_since_last_collection = self.game_instance.time
-                self.game_instance.bullet_targeting += 0.025
-                self.game_instance.bullet_relative_speed += 0.2
-                self.game_instance.period -= 35
-            elif not self.exists and self.game_instance.time - self.time_since_last_collection == 500:
-                self.game_instance.bullet_targeting -= 0.025
-                self.game_instance.bullet_relative_speed -= 0.2
-                self.game_instance.period += 35
+                self.game_instance.bullet_targeting += 0.0025
+                self.game_instance.bullet_relative_speed += 0.05
+                self.game_instance.period -= 10
+            elif not self.exists and self.game_instance.time - self.time_since_last_collection == 300:
+                self.game_instance.bullet_targeting -= 0.0025
+                self.game_instance.bullet_relative_speed -= 0.1
+                self.game_instance.period += 10
             elif not self.exists and self.game_instance.time - self.time_since_last_collection == 1000:
                 self.exists = True
 
