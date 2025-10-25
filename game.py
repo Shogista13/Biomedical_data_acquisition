@@ -69,10 +69,15 @@ class Game:
         for bullet in self.player_bullets:
             pygame.draw.rect(self.surface, (0, 102, 0), bullet.hitbox)
         pygame.draw.rect(self.surface, (212, 175, 55), self.player.hitbox)
+
+        mouse_position = pygame.mouse.get_pos()
+        line_x_end = int(self.player.hitbox.centerx + 100 * (mouse_position[0] - self.player.hitbox.centerx)/math.sqrt((mouse_position[0] - self.player.hitbox.centerx)**2 + (mouse_position[1] - self.player.hitbox.centery)**2))
+        line_y_end = int(self.player.hitbox.centery + 100 * (mouse_position[1] - self.player.hitbox.centery)/math.sqrt((mouse_position[0] - self.player.hitbox.centerx)**2 + (mouse_position[1] - self.player.hitbox.centery)**2))
+        pygame.draw.line(self.surface,(200, 100, 150),(self.player.hitbox.center),(line_x_end,line_y_end),10)
         self.display_HP()
         self.display_time()
 
-    def change_difficulty(self,speed,bullet_targeting,bullet_relative_speed):
+    def change_difficulty(self, speed, bullet_targeting, bullet_relative_speed):
         self.speed = speed
         self.bullet_targeting = bullet_targeting
         self.bullet_relative_speed = bullet_relative_speed
@@ -114,15 +119,15 @@ class Game:
             size_x = 25
             size_y = 25
             self.hitbox = pygame.Rect(x, y, size_x, size_y)
-            self.speed_x = self.game_instance.player.hitbox.x - self.hitbox.x + random.randint(-300, 300)
-            self.speed_y = self.game_instance.player.hitbox.y - self.hitbox.y + random.randint(-300, 300)
+            self.speed_x = self.game_instance.player.hitbox.centerx - self.hitbox.centerx + random.randint(-300, 300)
+            self.speed_y = self.game_instance.player.hitbox.centery - self.hitbox.centery + random.randint(-300, 300)
             self.normalizer = self.game_instance.bullet_relative_speed*self.game_instance.speed / (math.sqrt(self.speed_x ** 2 + self.speed_y ** 2) + 1)
             self.direction = (int(self.normalizer * self.speed_x), int(self.normalizer * self.speed_y))
             self.to_delete = False
 
         def move(self):
-            self.speed_x = (1-self.game_instance.bullet_targeting) * self.speed_x + self.game_instance.bullet_targeting*(self.game_instance.player.hitbox.x - self.hitbox.x)
-            self.speed_y = (1-self.game_instance.bullet_targeting) * self.speed_y + self.game_instance.bullet_targeting*(self.game_instance.player.hitbox.y - self.hitbox.y)
+            self.speed_x = (1-self.game_instance.bullet_targeting) * self.speed_x + self.game_instance.bullet_targeting*(self.game_instance.player.hitbox.centerx - self.hitbox.centerx)
+            self.speed_y = (1-self.game_instance.bullet_targeting) * self.speed_y + self.game_instance.bullet_targeting*(self.game_instance.player.hitbox.centery - self.hitbox.centery)
             self.normalizer = self.game_instance.bullet_relative_speed*self.game_instance.speed / (math.sqrt(self.speed_x ** 2 + self.speed_y ** 2) + 1)
             self.direction = (int(self.normalizer * self.speed_x), int(self.normalizer * self.speed_y))
             self.hitbox.move_ip(*self.direction)
@@ -156,10 +161,19 @@ class Game:
 
         def calculate_speed(self):
             mouse_position = pygame.mouse.get_pos()
-            delta_x = mouse_position[0] - self.hitbox.x
-            delta_y = mouse_position[1] - self.hitbox.y
-            self.speed_x = delta_x / math.sqrt(delta_x**2+delta_y**2+1)
-            self.speed_y = delta_y / math.sqrt(delta_x**2+delta_y**2+1)
+
+            delta_x = mouse_position[0] - self.hitbox.centerx
+            delta_y = mouse_position[1] - self.hitbox.centery
+            speed_magnitude = math.sqrt(delta_x**2+delta_y**2+1)
+            if speed_magnitude > 40:
+                self.speed_x = delta_x / math.sqrt(delta_x**2+delta_y**2+1)
+                self.speed_y = delta_y / math.sqrt(delta_x**2+delta_y**2+1)
+            else:
+                self.speed_x = 0
+                self.speed_y = 0
+                #mouse_cursor_x = self.hitbox.centerx + 40 * delta_x / math.sqrt(delta_x**2+delta_y**2+1) BLOKOWANIE MYSZKI Z DALA OD GRACZA
+                #mouse_cursor_y =  self.hitbox.centery + 40 * delta_y / math.sqrt(delta_x**2+delta_y**2+1)
+                #pygame.mouse.set_pos(mouse_cursor_x,mouse_cursor_y)
 
         def move(self):
             self.calculate_speed()
@@ -174,12 +188,11 @@ class Game:
             self.hitbox.y = min(max(0,self.hitbox.y), self.game_instance.height // 2)
 
         def shoot(self):
-            if self.game_instance.time - self.last_shot > 300:
+            if self.game_instance.time - self.last_shot > 100:
                 self.last_shot = self.game_instance.time
-                bullet_x = self.hitbox.x + (self.hitbox.width - 25) // 2
-                bullet_y = self.hitbox.y + (self.hitbox.height - 25) // 2
+                bullet_x = self.hitbox.centerx
+                bullet_y = self.hitbox.centery
                 self.game_instance.player_bullets.append(Game.PlayerBullet(self.game_instance,bullet_x, bullet_y))
-
 
     class PowerUp:
         def __init__(self,game_instance):
@@ -210,15 +223,16 @@ class Game:
             size_y = 25
             self.hitbox = pygame.Rect(x, y, size_x, size_y)
             self.spawn_time = 0
-            self.speed_x = game_instance.player.speed_x
-            self.speed_y = game_instance.player.speed_y
+            mouse_position = pygame.mouse.get_pos()
+            self.speed_x = mouse_position[0] - self.hitbox.x
+            self.speed_y = mouse_position[1] - self.hitbox.y
             self.normalizer = self.game_instance.bullet_relative_speed*self.game_instance.speed / (math.sqrt(self.speed_x ** 2 + self.speed_y ** 2) + 1)
             self.direction = (int(self.normalizer * self.speed_x), int(self.normalizer * self.speed_y))
             self.to_delete = False
 
         def find_closest_enemy(self):
-            enemies = [(enemy.hitbox.x,enemy.hitbox.y) for enemy in self.game_instance.enemies]
-            enemies.sort(key = lambda enemy:(enemy[0]-self.hitbox.x)**2+(enemy[1]-self.hitbox.y)**2)
+            enemies = [(enemy.hitbox.centerx,enemy.hitbox.centery) for enemy in self.game_instance.enemies]
+            enemies.sort(key = lambda enemy:(enemy[0]-self.hitbox.centerx)**2+(enemy[1]-self.hitbox.centery)**2)
             if enemies:
                 return enemies[0]
             else:
@@ -226,8 +240,8 @@ class Game:
 
         def move(self):
             closest_enemy = self.find_closest_enemy()
-            self.speed_x = (1-self.game_instance.bullet_targeting/2) * self.speed_x + self.game_instance.bullet_targeting/2*(closest_enemy[0]- self.hitbox.x)
-            self.speed_y = (1-self.game_instance.bullet_targeting/2) * self.speed_y + self.game_instance.bullet_targeting/2*(closest_enemy[1] - self.hitbox.y)
+            self.speed_x = (1-self.game_instance.bullet_targeting) * self.speed_x + self.game_instance.bullet_targeting*(closest_enemy[0]- self.hitbox.centerx)
+            self.speed_y = (1-self.game_instance.bullet_targeting) * self.speed_y + self.game_instance.bullet_targeting*(closest_enemy[1] - self.hitbox.centery)
             self.normalizer = self.game_instance.bullet_relative_speed*self.game_instance.speed / (math.sqrt(self.speed_x ** 2 + self.speed_y ** 2) + 1)
             self.direction = (int(self.normalizer * self.speed_x), int(self.normalizer * self.speed_y))
             self.hitbox.move_ip(*self.direction)
