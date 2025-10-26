@@ -3,13 +3,12 @@ import os
 from data_preprocessing import process_data
 
 class Data:
-    def __init__(self,path,phase,subject_number):
+    def __init__(self,path,phase):
         self.phase = phase
         self.path = path
         column_titles = ["HP","Power up","Player x", "Player y", "Player speed_x", "Player speed_y", "Player bullet x", "Player bullet y", "Player bullet speed_x",
                          "Player bullet speed_y",'Enemy x', "Enemy y","Enemy speed_x", "Enemy speed_y", "Enemy bullet x", "Enemy bullet y",
                          "Enemy bullet speed_x", "Enemy bullet speed_y", "Humidity", "Temperature", "Skin conductance", "Relative blood volume"]
-        self.number = subject_number
         self.df = pd.DataFrame(columns=column_titles)
 
     def get_data(self,sensor_data,player,enemies,enemy_bullets, player_bullets,HP,power_up):
@@ -39,5 +38,5 @@ class Data:
                            skin_conductance,relative_blood_volume]
 
     def save_data(self):
-        pd.DataFrame.to_csv(self.df, self.path +"/" + self.phase + '/unprocessed/subject' + str(self.number))
+        pd.DataFrame.to_csv(self.df, self.path +'/unprocessed/' + self.phase)
         process_data(self.df,self.path,self.phase,str(self.number))

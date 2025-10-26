@@ -11,7 +11,6 @@ def calculate_collection_time(dataframe):
     collected = [i for i,value in enumerate(power_up_exists[0:-2]) if power_up_exists and not power_up_exists[i+1]] #get the time of collection of the power up
 
 
-
 def calculate_conductance(sample):
     voltage = 5 / 65535 * sample
     return 1000*(5 - voltage) / (10 * voltage) #w mikrosiemensach
@@ -49,13 +48,6 @@ def process_spatial_parameters(player_x_list,player_y_list,other_objects_x_list,
         collapsed_distances.append(collapsed)
     return numbers_of_objects,collapsed_distances
 
-#def smooth(signal,filter_length):
-#    if len(signal) > filter_length:
-#        smoothed_signal = [statistics.mean(signal[i-filter_length//2:i+filter_length//2]) for i in range(filter_length//2,len(signal)-filter_length//2-1)]
-#        return smoothed_signal
-#    else:
-#        return None
-
 def calculate_derivative(signal):
     smoothed_signal = gaussian_filter1d(signal, sigma=2)
     return np.gradient(smoothed_signal)
@@ -84,4 +76,4 @@ def process_data(dataframe,path,phase,number):
                  "HP":dataframe['Skin conductance'].tolist(),
                  })
     df = pd.DataFrame(data)
-    pd.DataFrame.to_csv(df, path + "/" + phase + '/processed/subject' + number)
+    pd.DataFrame.to_csv(df, path + '/processed/' + phase)
