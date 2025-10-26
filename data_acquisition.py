@@ -1,6 +1,6 @@
 import pandas as pd
 import os
-from data_processing import process_data
+from data_preprocessing import process_data
 
 class Data:
     def __init__(self,path,phase):

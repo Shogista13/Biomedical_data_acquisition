@@ -6,6 +6,9 @@ from scipy.ndimage import gaussian_filter1d
 import numpy as np
 import pandas as pd
 
+def calculate_collection_time(dataframe):
+
+
 def calculate_conductance(sample):
     voltage = 5 / 65535 * sample
     return 1000*(5 - voltage) / (10 * voltage) #w mikrosiemensach
@@ -60,18 +63,22 @@ def process_data(dataframe,path,phase,number):
     humidity = calculate_derivative(dataframe['Humidity'].tolist())
     number_of_enemies,collapsed_distances_to_enemies = process_spatial_parameters([dataframe['Player x'].tolist(),dataframe['Player y'].tolist()
                                                                                       ,dataframe['Enemy x'].tolist(),dataframe['Enemy y'].tolist()])
-    number_of_bullets, collapsed_distances_to_bullets = process_spatial_parameters([dataframe['Player x'].tolist(),dataframe['Player y'].tolist()
+    collapsed_distances_to_enemies_derivative = calculate_derivative(collapsed_distances_to_enemies)
+
+    number_of_enemy_bullets, collapsed_distances_to_enemy_bullets = process_spatial_parameters([dataframe['Player x'].tolist(),dataframe['Player y'].tolist()
                                                                                       ,dataframe['Bullet x'].tolist(),dataframe['Bullet y'].tolist()])
+    collapsed_distances_to_enemy_bullets_derivative = calculate_derivative(collapsed_distances_to_enemy_bullets)
     data = dict({"eda":eda,
                  "era":era,
                  "heart rate":heart_rate,
                  "humidity derivative":humidity,
-                 "numer_of_enemies":number_of_enemies,
+                 "number_of_enemies":number_of_enemies,
                  "collapsed_distances_to_enemies":collapsed_distances_to_enemies,
-                 "number_of_enemies": number_of_enemies,
-                 "collapsed_distances_to_enemies": collapsed_distances_to_enemies,
-                 "number_of_bullets": number_of_bullets,
-                 "collapsed_distances_to_bullets": collapsed_distances_to_bullets
+                 "collapsed_distances_to_enemies_derivative":collapsed_distances_to_enemies_derivative,
+                 "number_of_enemy_bullets": number_of_enemy_bullets,
+                 "collapsed_distances_to_enemy_bullets": collapsed_distances_to_enemy_bullets,
+                 "collapsed_distances_to_enemy_bullets_derivative": collapsed_distances_to_enemy_bullets_derivative,
+                 "HP":dataframe['Skin conductance'].tolist(),
                  })
     df = pd.DataFrame(data)
     pd.DataFrame.to_csv(df, path + "/" + phase + '/processed/subject' + number)
