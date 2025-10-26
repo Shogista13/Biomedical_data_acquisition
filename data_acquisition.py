@@ -3,13 +3,13 @@ import os
 from data_preprocessing import process_data
 
 class Data:
-    def __init__(self,path,phase):
+    def __init__(self,path,phase,subject_number):
         self.phase = phase
         self.path = path
-        column_titles = ["HP", "Power up","Player x", "Player y", "Player speed_x", "Player speed_y", "Player bullet x", "Player bullet y", "Player bullet speed_x",
+        column_titles = ["HP","Power up","Player x", "Player y", "Player speed_x", "Player speed_y", "Player bullet x", "Player bullet y", "Player bullet speed_x",
                          "Player bullet speed_y",'Enemy x', "Enemy y","Enemy speed_x", "Enemy speed_y", "Enemy bullet x", "Enemy bullet y",
                          "Enemy bullet speed_x", "Enemy bullet speed_y", "Humidity", "Temperature", "Skin conductance", "Relative blood volume"]
-        self.number = len(os.listdir(path+'/'+phase+'/unprocessed'))
+        self.number = subject_number
         self.df = pd.DataFrame(columns=column_titles)
 
     def get_data(self,sensor_data,player,enemies,enemy_bullets, player_bullets,HP,power_up):

@@ -7,6 +7,9 @@ import numpy as np
 import pandas as pd
 
 def calculate_collection_time(dataframe):
+    power_up_exists = dataframe["Power up"]
+    collected = [i for i,value in enumerate(power_up_exists[0:-2]) if power_up_exists and not power_up_exists[i+1]] #get the time of collection of the power up
+
 
 
 def calculate_conductance(sample):
@@ -32,9 +35,9 @@ def process_spatial_parameters_in_single_frame(player_x,player_y,other_objects_x
     number_of_objects = len(other_objects_x)
     distances = [math.sqrt((player_x[i]-other_objects_x[i])**2+(player_y[i]-other_objects_y[i])**2) for i in range(number_of_objects)]
     if distances:
-        collapsed = statistics.harmonic_mean(distances)
+        collapsed = statistics.harmonic_mean(distances) #bierzemy średnią harmoniczną, bo bardzo na nią wpływają małe wartości (blisko coś), dalsze obiekty mniej
     else:
-        collapsed = None
+        collapsed = None #nie wiemy co z tym zrobić, żeby nie psuło analizy, pewnie damy po prostu jakąś dużą liczbę do środka, ale chyba sie nie zdarzy i tak
     return number_of_objects,collapsed
 
 def process_spatial_parameters(player_x_list,player_y_list,other_objects_x_list,other_objects_y_list):
