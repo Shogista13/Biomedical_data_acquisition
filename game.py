@@ -3,30 +3,37 @@ import random
 import math
 
 class Game:
-    def __init__(self,period,speed,HP,bullet_relative_speed,bullet_targeting,power_up_strenght):
+    def __init__(self,period,speed,HP,bullet_relative_speed,bullet_targeting,power_up_strenght,power_up_gradually,power_up_risky_time,power_up_animated):
         pygame.init()
         pygame.font.init()
         self.font = pygame.font.Font(None, 80)
-        self.time = 0
-        self.enemies = []
-        self.enemy_bullets = []
-        self.player_bullets = []
-        self.bullet_targeting = bullet_targeting
-        self.bullet_relative_speed = bullet_relative_speed
-        self.HP = HP
+
         info = pygame.display.Info()
         self.width = info.current_w
         self.height = info.current_h
         self.surface = pygame.display.set_mode((self.width, self.height), pygame.FULLSCREEN)
-        self.max_enemies = 5
-        self.player_starting_y = self.height//4
+
         self.time = 0
+        self.enemies = []
+        self.enemy_bullets = []
+        self.player_bullets = []
+        self.HP = HP
+
+        self.bullet_targeting = bullet_targeting
+        self.bullet_relative_speed = bullet_relative_speed
         self.period = period
         self.speed = speed
+        self.max_enemies = 5
+
         self.player = Game.Player(self)
+
         self.power_up = Game.PowerUp(self)
         self.power_up_strenght = power_up_strenght
-        self.enemies_boundary = self.height // 2
+        self.power_up_gradually = power_up_gradually
+        self.power_up_risky_time = power_up_risky_time
+        self.power_up_animated = power_up_animated
+
+        self.enemies_boundary = 2*self.height // 3
 
     def display_HP(self):
         text = self.font.render(f'HP: {self.HP}', True,(0,0,0))
@@ -42,7 +49,7 @@ class Game:
 
     def spawn_enemies(self):
         if self.time % self.period == 0 and len(self.enemies) < self.max_enemies:
-            self.enemies.append(Game.Enemy(self,random.randint(50, self.width - 50), random.randint(self.enemies_boundary, self.enemies_boundary + self.height//2)))
+            self.enemies.append(Game.Enemy(self,random.randint(50, self.width - 50), random.randint(self.enemies_boundary, self.enemies_boundary + self.height//3)))
 
     def move_objects(self):
         self.player.move()
@@ -85,9 +92,9 @@ class Game:
     class Enemy:
         def __init__(self,game_instance, x, y):
             self.game_instance = game_instance
-            size_x = 50
-            size_y = 50
-            self.hitbox = pygame.Rect(x, y, size_x, size_y)
+            self.size_x = 50
+            self.size_y = 50
+            self.hitbox = pygame.Rect(x, y, self.size_x, self.size_y)
             self.speed_x = 0
             self.speed_y = 0
 
@@ -102,7 +109,7 @@ class Game:
             chaotic_component_x = int(4*math.sin(2 * math.pi * self.hitbox.x)) + random.randint(-4,4)
             chaotic_component_y = int(4*math.sin(2 * math.pi * self.hitbox.y)) + random.randint(-4,4)
             centalizing_component_x = (self.game_instance.width//2 - self.hitbox.x)//100
-            centalizing_component_y = (self.game_instance.enemies_boundary + self.game_instance.height//4 - self.hitbox.y)//100
+            centalizing_component_y = (self.game_instance.enemies_boundary + self.game_instance.height//6 - self.hitbox.y)//100
             self.speed_x += (basic_component +  chaotic_component_x + centalizing_component_x)
             self.speed_y += (basic_component + chaotic_component_y + centalizing_component_y)
             self.hitbox.move_ip(self.speed_x//50, self.speed_y//50)
@@ -110,7 +117,7 @@ class Game:
 
         def bound(self):
             self.hitbox.x = min(max(0, self.hitbox.x), self.game_instance.width - self.hitbox.width)
-            self.hitbox.y = min(max(self.game_instance.height // 2,self.hitbox.y), self.game_instance.height)
+            self.hitbox.y = min(max(self.game_instance.enemies_boundary,self.hitbox.y), self.game_instance.height-self.size_y)
 
     class EnemyBullet:
         def __init__(self,game_instance,x, y):
@@ -150,9 +157,9 @@ class Game:
     class Player:
         def __init__(self,game_instance):
             self.game_instance = game_instance
-            size_x = 50
-            size_y = 50
-            self.hitbox = pygame.Rect(self.game_instance.width // 2, self.game_instance.player_starting_y, size_x, size_y)
+            self.size_x = 50
+            self.size_y = 50
+            self.hitbox = pygame.Rect(self.game_instance.width // 2, self.game_instance.height//3, self.size_x, self.size_y)
             self.speed = 0
             self.speed_x = 0
             self.speed_y = 0
@@ -185,7 +192,7 @@ class Game:
 
         def bound(self):
             self.hitbox.x = min(max(0, self.hitbox.x), self.game_instance.width - self.hitbox.width)
-            self.hitbox.y = min(max(0,self.hitbox.y), self.game_instance.height // 2)
+            self.hitbox.y = min(max(0,self.hitbox.y), 2*self.game_instance.height // 3-self.size_x)
 
         def shoot(self):
             if self.game_instance.time - self.last_shot > 100:
@@ -203,18 +210,36 @@ class Game:
 
         def spawn_or_collect(self):
             if self.hitbox.colliderect(self.game_instance.player.hitbox) and self.exists:
-                self.exists = False
-                self.game_instance.HP += self.game_instance.power_up_strenght
-                self.time_since_last_collection = self.game_instance.time
-                self.game_instance.bullet_targeting += 0.0025
-                self.game_instance.bullet_relative_speed += 0.05
-                self.game_instance.period -= 10
-            elif not self.exists and self.game_instance.time - self.time_since_last_collection == 300:
-                self.game_instance.bullet_targeting -= 0.0025
-                self.game_instance.bullet_relative_speed -= 0.1
-                self.game_instance.period += 10
+                self.collected()
+            elif not self.exists and self.game_instance.time - self.time_since_last_collection == self.game_instance.power_up_risky_time: #300
+                self.restore_difficulty()
             elif not self.exists and self.game_instance.time - self.time_since_last_collection == 1000:
                 self.exists = True
+
+        def collected(self):
+            if self.game_instance.power_up_animeted:
+                self.play_animation()
+            self.exists = False
+            self.time_since_last_collection = self.game_instance.time
+            self.game_instance.bullet_targeting += 0.0025
+            self.game_instance.bullet_relative_speed += 0.05
+            self.game_instance.period -= 10
+            if not self.game_instance.power_up_gradually:
+                self.game_instance.HP += self.game_instance.power_up_strenght
+            else:
+                self.heal_gradually()
+
+        def heal_gradually(self):
+            if (self.game_instance.time - self.time_since_last_collection)%1000 == 0 and 0<(self.game_instance.time - self.time_since_last_collection)<= self.game_instance.power_up_strenght * 1000:
+                self.game_instance.HP += 1
+
+        def restore_difficulty(self):
+            self.game_instance.bullet_targeting -= 0.0025
+            self.game_instance.bullet_relative_speed -= 0.1
+            self.game_instance.period += 10
+
+        def play_animation(self):
+            pass
 
     class PlayerBullet:
         def __init__(self,game_instance,x, y):
