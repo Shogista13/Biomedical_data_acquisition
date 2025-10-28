@@ -3,7 +3,7 @@ import random
 import math
 
 class Game:
-    def __init__(self,period,speed,HP,bullet_relative_speed,bullet_targeting,power_up_strenght,power_up_gradually,power_up_risky_time,power_up_animated):
+    def __init__(self,period,speed,HP,bullet_relative_speed,bullet_targeting,power_up_strength,power_up_gradually,power_up_risky_time,power_up_animated):
         pygame.init()
         pygame.font.init()
         self.font = pygame.font.Font(None, 80)
@@ -28,7 +28,7 @@ class Game:
         self.player = Game.Player(self)
 
         self.power_up = Game.PowerUp(self)
-        self.power_up_strenght = power_up_strenght
+        self.power_up_strength = power_up_strength
         self.power_up_gradually = power_up_gradually
         self.power_up_risky_time = power_up_risky_time
         self.power_up_animated = power_up_animated
@@ -225,12 +225,12 @@ class Game:
             self.game_instance.bullet_relative_speed += 0.05
             self.game_instance.period -= 10
             if not self.game_instance.power_up_gradually:
-                self.game_instance.HP += self.game_instance.power_up_strenght
+                self.game_instance.HP += self.game_instance.power_up_strength
             else:
                 self.heal_gradually()
 
         def heal_gradually(self):
-            if (self.game_instance.time - self.time_since_last_collection)%1000 == 0 and 0<(self.game_instance.time - self.time_since_last_collection)<= self.game_instance.power_up_strenght * 1000:
+            if (self.game_instance.time - self.time_since_last_collection)%1000 == 0 and 0<(self.game_instance.time - self.time_since_last_collection)<= self.game_instance.power_up_strength * 1000:
                 self.game_instance.HP += 1
 
         def restore_difficulty(self):
