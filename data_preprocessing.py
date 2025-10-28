@@ -32,7 +32,7 @@ def get_pulse(signal):
     minimum = min(signal)
     maximum = max(signal)
     normalized_signal = [normalize_pulse_volume(sample,minimum,maximum) for sample in signal]
-    features = ppg(normalized_signal,sampling_rate = 20)
+    features = ppg(normalized_signal,sampling_rate = 100)
     #5 - 6 to oś czasu i BPM (bo ten algorytm nie zwraca BPM w jednakowych odstępach tylko w takich gdzie obliczy
     heart_rate_interpolated = np.interp(list(range(len(signal))),features[5],features[6])
     #interpolujemy BPM w czasie, kiedy są inne parametry, żeby łatwiej porównywać
@@ -68,25 +68,25 @@ def calculate_derivative(signal):
 def process_data(dataframe,path,phase):
     eda,era = get_gsr(dataframe['Skin conductance'].tolist())
     heart_rate = get_pulse([sample for samples in dataframe['Relative blood volume'].tolist() for sample in samples])
-    humidity = calculate_derivative(dataframe['Humidity'].tolist())
-    number_of_enemies,collapsed_distances_to_enemies = process_spatial_parameters([dataframe['Player x'].tolist(),dataframe['Player y'].tolist()
-                                                                                      ,dataframe['Enemy x'].tolist(),dataframe['Enemy y'].tolist()])
-    collapsed_distances_to_enemies_derivative = calculate_derivative(collapsed_distances_to_enemies)
-
-    number_of_enemy_bullets, collapsed_distances_to_enemy_bullets = process_spatial_parameters([dataframe['Player x'].tolist(),dataframe['Player y'].tolist()
-                                                                                      ,dataframe['Bullet x'].tolist(),dataframe['Bullet y'].tolist()])
-    collapsed_distances_to_enemy_bullets_derivative = calculate_derivative(collapsed_distances_to_enemy_bullets)
+    #humidity = calculate_derivative(dataframe['Humidity'].tolist())
+    #number_of_enemies,collapsed_distances_to_enemies = process_spatial_parameters([dataframe['Player x'].tolist(),dataframe['Player y'].tolist()
+    #                                                                                  ,dataframe['Enemy x'].tolist(),dataframe['Enemy y'].tolist()])
+    #collapsed_distances_to_enemies_derivative = calculate_derivative(collapsed_distances_to_enemies)
+#
+    #number_of_enemy_bullets, collapsed_distances_to_enemy_bullets = process_spatial_parameters([dataframe['Player x'].tolist(),dataframe['Player y'].tolist()
+ #                                                                                     ,dataframe['Bullet x'].tolist(),dataframe['Bullet y'].tolist()])
+    #collapsed_distances_to_enemy_bullets_derivative = calculate_derivative(collapsed_distances_to_enemy_bullets)
     data = dict({"eda":eda,
                  "era":era,
                  "heart rate":heart_rate,
-                 "humidity derivative":humidity,
-                 "number_of_enemies":number_of_enemies,
-                 "collapsed_distances_to_enemies":collapsed_distances_to_enemies,
-                 "collapsed_distances_to_enemies_derivative":collapsed_distances_to_enemies_derivative,
-                 "number_of_enemy_bullets": number_of_enemy_bullets,
-                 "collapsed_distances_to_enemy_bullets": collapsed_distances_to_enemy_bullets,
-                 "collapsed_distances_to_enemy_bullets_derivative": collapsed_distances_to_enemy_bullets_derivative,
-                 "HP":dataframe['Skin conductance'].tolist(),
+                 #"humidity derivative":humidity,
+                 #"number_of_enemies":number_of_enemies,
+                 #"collapsed_distances_to_enemies":collapsed_distances_to_enemies,
+                 #"collapsed_distances_to_enemies_derivative":collapsed_distances_to_enemies_derivative,
+                 #"number_of_enemy_bullets": number_of_enemy_bullets,
+                 #"collapsed_distances_to_enemy_bullets": collapsed_distances_to_enemy_bullets,
+                 #"collapsed_distances_to_enemy_bullets_derivative": collapsed_distances_to_enemy_bullets_derivative,
+                 #"HP":dataframe['Skin conductance'].tolist(),
                  })
     df = pd.DataFrame(data)
     pd.DataFrame.to_csv(df, path + '/processed/' + phase)
