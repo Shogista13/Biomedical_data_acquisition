@@ -8,8 +8,14 @@ import pandas as pd
 
 def calculate_collection_time(dataframe):
     power_up_exists = dataframe["Power up"]
+    nr_of_samples = len(power_up_exists)
     collected = [i for i,value in enumerate(power_up_exists[0:-2]) if power_up_exists and not power_up_exists[i+1]] #get the time of collection of the power up
-
+    time_to_analyze = []
+    for i in collected:
+        time_to_analyze.extend(list(range(max(0,i-200),min(nr_of_samples,i+1000))))
+    #bierzemy około 2 sekundy przed i 15 sekund po zebraniu power_upa
+    time_to_analyze = [i in time_to_analyze for i in range(nr_of_samples)]
+    return time_to_analyze
 
 def calculate_conductance(sample):
     voltage = 5 / 65535 * sample
@@ -27,16 +33,22 @@ def get_pulse(signal):
     maximum = max(signal)
     normalized_signal = [normalize_pulse_volume(sample,minimum,maximum) for sample in signal]
     features = ppg(normalized_signal,sampling_rate = 20)
-    heart_rate_interpolated = np.interp(list(range(len(signal))),features[5],features[6])#oś czasu i BPM
+    #5 - 6 to oś czasu i BPM (bo ten algorytm nie zwraca BPM w jednakowych odstępach tylko w takich gdzie obliczy
+    heart_rate_interpolated = np.interp(list(range(len(signal))),features[5],features[6])
+    #interpolujemy BPM w czasie, kiedy są inne parametry, żeby łatwiej porównywać
     return heart_rate_interpolated
 
 def process_spatial_parameters_in_single_frame(player_x,player_y,other_objects_x,other_objects_y):
     number_of_objects = len(other_objects_x)
     distances = [math.sqrt((player_x[i]-other_objects_x[i])**2+(player_y[i]-other_objects_y[i])**2) for i in range(number_of_objects)]
     if distances:
-        collapsed = statistics.harmonic_mean(distances) #bierzemy średnią harmoniczną, bo bardzo na nią wpływają małe wartości (blisko coś), dalsze obiekty mniej
+        collapsed = statistics.harmonic_mean(distances)
+        #bierzemy średnią harmoniczną, bo bardzo na nią wpływają małe wartości (blisko coś),
+        #dalsze obiekty mniej
     else:
-        collapsed = None #nie wiemy co z tym zrobić, żeby nie psuło analizy, pewnie damy po prostu jakąś dużą liczbę do środka, ale chyba sie nie zdarzy i tak
+        collapsed = None
+        #nie wiemy co z tym zrobić, żeby nie psuło analizy,
+        #pewnie damy po prostu jakąś dużą liczbę do środka, ale chyba sie nie zdarzy i tak
     return number_of_objects,collapsed
 
 def process_spatial_parameters(player_x_list,player_y_list,other_objects_x_list,other_objects_y_list):
@@ -46,13 +58,14 @@ def process_spatial_parameters(player_x_list,player_y_list,other_objects_x_list,
         number_of_objects,collapsed = process_spatial_parameters_in_single_frame(player_x_list[frame],player_y_list[frame],other_objects_x_list[frame],other_objects_y_list[frame])
         numbers_of_objects.append(number_of_objects)
         collapsed_distances.append(collapsed)
+        #bierzemy liczbę przeciwników/pocisków i średnią harmoniczną odległości
     return numbers_of_objects,collapsed_distances
 
 def calculate_derivative(signal):
     smoothed_signal = gaussian_filter1d(signal, sigma=2)
-    return np.gradient(smoothed_signal)
+    return np.gradient(smoothed_signal) #filtruje noise i lizy pochodną
 
-def process_data(dataframe,path,phase,number):
+def process_data(dataframe,path,phase):
     eda,era = get_gsr(dataframe['Skin conductance'].tolist())
     heart_rate = get_pulse([sample for samples in dataframe['Relative blood volume'].tolist() for sample in samples])
     humidity = calculate_derivative(dataframe['Humidity'].tolist())

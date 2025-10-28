@@ -13,11 +13,12 @@ form = Form()
 path = form.path
 port_name = 'COM7'
 phase = 'control'
-#period,speed,HP,bullet_relative_speed,bullet_targeting,power_up_strenght,power_up_gradually,power_up_risky_time,power_up_animated
-phases = {'control':[40,10,10,0.7,0.005,2,False,300,False],
-'more reward, more risky time':[40,10,10,0.7,0.005,4,False,600,False],
-'reward in installments':[40,10,10,0.7,0.005,2,True,300,False],
-'power up animated with sound effect':[40,10,10,0.7,0.005,2,False,300,True]
+#period,speed,HP,bullet_relative_speed,bullet_targeting,power_up_strenght,power_up_gradually,power_up_risky_time,
+#power_up_animated
+phases = {'control':[40,10,10,0.7,0.005,3,False,500,False],
+#'more reward, more risky time':[40,10,10,0.7,0.005,4,False,600,False],
+'reward in installments':[40,10,10,0.7,0.005,3,True,500,False],
+'power up animated with sound effect':[40,10,10,0.7,0.005,2,False,500,True]
 }
 
 game_instance = game.Game(*phases[phase])

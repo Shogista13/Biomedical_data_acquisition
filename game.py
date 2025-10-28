@@ -213,7 +213,7 @@ class Game:
                 self.collected()
             elif not self.exists and self.game_instance.time - self.time_since_last_collection == self.game_instance.power_up_risky_time: #300
                 self.restore_difficulty()
-            elif not self.exists and self.game_instance.time - self.time_since_last_collection == 1000:
+            elif not self.exists and self.game_instance.time - self.time_since_last_collection == 3000:
                 self.exists = True
 
         def collected(self):
