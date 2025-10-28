@@ -100,8 +100,8 @@ class Game:
 
         def shoot(self):
             if self.game_instance.time % self.game_instance.period == 0 and self.game_instance.time > 500:
-                bullet_x = self.hitbox.x + (self.hitbox.width - 25) // 2
-                bullet_y = self.hitbox.y + (self.hitbox.height - 25) // 2
+                bullet_x = self.hitbox.centerx
+                bullet_y = self.hitbox.centery
                 self.game_instance.enemy_bullets.append(Game.EnemyBullet(self.game_instance,bullet_x, bullet_y))
 
         def move(self, time):
@@ -192,7 +192,7 @@ class Game:
 
         def bound(self):
             self.hitbox.x = min(max(0, self.hitbox.x), self.game_instance.width - self.hitbox.width)
-            self.hitbox.y = min(max(0,self.hitbox.y), 2*self.game_instance.height // 3-self.size_x)
+            self.hitbox.y = min(max(0,self.hitbox.y), 2*self.game_instance.height // 3)
 
         def shoot(self):
             if self.game_instance.time - self.last_shot > 100:
@@ -217,7 +217,7 @@ class Game:
                 self.exists = True
 
         def collected(self):
-            if self.game_instance.power_up_animeted:
+            if self.game_instance.power_up_animated:
                 self.play_animation()
             self.exists = False
             self.time_since_last_collection = self.game_instance.time
