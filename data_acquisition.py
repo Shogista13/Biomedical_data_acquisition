@@ -1,6 +1,6 @@
 import pandas as pd
 import os
-from data_preprocessing import process_data
+#from data_preprocessing import process_data
 
 class Data:
     def __init__(self,path,phase):
@@ -40,4 +40,4 @@ class Data:
 
     def save_data(self):
         pd.DataFrame.to_csv(self.df, self.path +"/" + self.phase + '/unprocessed/subject' + str(self.number))
-        process_data(self.df,self.path,self.phase,str(self.number))
+        #process_data(self.df,self.path,self.phase,str(self.number))

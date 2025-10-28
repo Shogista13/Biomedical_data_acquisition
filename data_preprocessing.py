@@ -7,7 +7,14 @@ import numpy as np
 import pandas as pd
 
 def calculate_collection_time(dataframe):
-
+    power_up_exists = dataframe["Power up"]
+    length = len(power_up_exists)
+    collection_time = [i for i,exists in power_up_exists[:-2] if exists and not power_up_exists[i+1]]
+    time_to_analyze = []
+    for moment in collection_time:
+        time_to_analyze.extend(list(range(moment-200,min(moment+200,length-1))))
+    time_to_analyze = [i in time_to_analyze for i in range(length)]
+    return time_to_analyze
 
 def calculate_conductance(sample):
     voltage = 5 / 65535 * sample

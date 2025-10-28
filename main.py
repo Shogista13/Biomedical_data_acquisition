@@ -30,7 +30,6 @@ def acquire_data():
     global run,port,data_splitted
     while run:
         data = port.readline().decode('utf-8').strip()
-        print(data)
         data_splitted = [float(i.strip('[]')) for i in data.split(",")]
 
 data_acquisition_thread = threading.Thread(target=acquire_data)
