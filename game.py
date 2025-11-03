@@ -1,9 +1,10 @@
 import pygame
 import random
 import math
+import math
 
 class Game:
-    def __init__(self,period,speed,HP,bullet_relative_speed,bullet_targeting,power_up_strength,power_up_gradually,power_up_risky_time,power_up_animated):
+    def __init__(self,period,speed,HP,bullet_relative_speed,bullet_targeting,power_up_strength,power_up_gradually,power_up_risky_time,power_up_animated,subdued_colors):
         pygame.init()
         pygame.font.init()
         self.font = pygame.font.Font(None, 80)
@@ -12,6 +13,11 @@ class Game:
         self.width = info.current_w
         self.height = info.current_h
         self.surface = pygame.display.set_mode((self.width, self.height), pygame.FULLSCREEN)
+
+        self.player_sprite = "Resprite_exports/Player"+str(int(subdued_colors))+".gif"
+        self.enemy_sprite = "Resprite_exports/Enemy"+str(int(subdued_colors))+".gif"
+        self.bullet_sprite = "Resprite_exports/Bullet"+str(int(subdued_colors))+".gif"
+        self.power_up_sprite = "Resprite_exports/Medkit"+str(int(subdued_colors))+".gif"
 
         self.time = 0
         self.enemies = []
@@ -68,19 +74,19 @@ class Game:
     def draw_objects(self):
         self.surface.fill((128, 128, 128))
         if self.power_up.exists:
-            pygame.draw.rect(self.surface,(255,255,255),self.power_up.hitbox)
+            self.surface.blit(self.power_up.image,self.power_up.rect)
         for enemy in self.enemies:
-            pygame.draw.rect(self.surface, (0, 255, 0), enemy.hitbox)
+            self.surface.blit(enemy.image,enemy.rect)
         for bullet in self.enemy_bullets:
-            pygame.draw.rect(self.surface, (0, 0, 255), bullet.hitbox)
+            self.surface.blit(bullet.image,bullet.rect)
         for bullet in self.player_bullets:
-            pygame.draw.rect(self.surface, (0, 102, 0), bullet.hitbox)
-        pygame.draw.rect(self.surface, (212, 175, 55), self.player.hitbox)
+            self.surface.blit(bullet.image, bullet.rect)
+        self.surface.blit(self.player.image, self.player.rect)
 
-        mouse_position = pygame.mouse.get_pos()
-        line_x_end = int(self.player.hitbox.centerx + 100 * (mouse_position[0] - self.player.hitbox.centerx)/math.sqrt((mouse_position[0] - self.player.hitbox.centerx)**2 + (mouse_position[1] - self.player.hitbox.centery)**2))
-        line_y_end = int(self.player.hitbox.centery + 100 * (mouse_position[1] - self.player.hitbox.centery)/math.sqrt((mouse_position[0] - self.player.hitbox.centerx)**2 + (mouse_position[1] - self.player.hitbox.centery)**2))
-        pygame.draw.line(self.surface,(200, 100, 150),(self.player.hitbox.center),(line_x_end,line_y_end),10)
+        #mouse_position = pygame.mouse.get_pos()
+        #line_x_end = int(self.player.rect.centerx + 100 * (mouse_position[0] - self.player.rect.centerx)/math.sqrt((mouse_position[0] - self.player.rect.centerx)**2 + (mouse_position[1] - self.player.rect.centery)**2))
+        #line_y_end = int(self.player.rect.centery + 100 * (mouse_position[1] - self.player.rect.centery)/math.sqrt((mouse_position[0] - self.player.rect.centerx)**2 + (mouse_position[1] - self.player.rect.centery)**2))
+        #pygame.draw.line(self.surface,(200, 100, 150),(self.player.rect.center),(line_x_end,line_y_end),10)
         self.display_HP()
         self.display_time()
 
@@ -92,74 +98,111 @@ class Game:
     class Enemy:
         def __init__(self,game_instance, x, y):
             self.game_instance = game_instance
-            self.size_x = 50
-            self.size_y = 50
-            self.hitbox = pygame.Rect(x, y, self.size_x, self.size_y)
+            self.image = pygame.image.load(game_instance.enemy_sprite).convert()
+            self.rect = self.image.get_rect()
+            self.rect.x = x
+            self.rect.y = y
             self.speed_x = 0
             self.speed_y = 0
 
         def shoot(self):
             if self.game_instance.time % self.game_instance.period == 0 and self.game_instance.time > 500:
-                bullet_x = self.hitbox.centerx
-                bullet_y = self.hitbox.centery
+                bullet_x = self.rect.centerx
+                bullet_y = self.rect.centery
                 self.game_instance.enemy_bullets.append(Game.EnemyBullet(self.game_instance,bullet_x, bullet_y))
 
         def move(self, time):
             basic_component = (2 * (int(((time+50) / 100)) % 2) - 1) * self.game_instance.speed // 10
-            chaotic_component_x = int(4*math.sin(2 * math.pi * self.hitbox.x)) + random.randint(-4,4)
-            chaotic_component_y = int(4*math.sin(2 * math.pi * self.hitbox.y)) + random.randint(-4,4)
-            centalizing_component_x = (self.game_instance.width//2 - self.hitbox.x)//100
-            centalizing_component_y = (self.game_instance.enemies_boundary + self.game_instance.height//6 - self.hitbox.y)//100
+            chaotic_component_x = int(4*math.sin(2 * math.pi * self.rect.x)) + random.randint(-4,4)
+            chaotic_component_y = int(4*math.sin(2 * math.pi * self.rect.y)) + random.randint(-4,4)
+            centalizing_component_x = (self.game_instance.width//2 - self.rect.x)//100
+            centalizing_component_y = (self.game_instance.enemies_boundary + self.game_instance.height//6 - self.rect.y)//100
             self.speed_x += (basic_component +  chaotic_component_x + centalizing_component_x)
             self.speed_y += (basic_component + chaotic_component_y + centalizing_component_y)
-            self.hitbox.move_ip(self.speed_x//50, self.speed_y//50)
+            self.rect.move_ip(self.speed_x//50, self.speed_y//50)
             self.bound()
+            self.rotate()
 
         def bound(self):
-            self.hitbox.x = min(max(0, self.hitbox.x), self.game_instance.width - self.hitbox.width)
-            self.hitbox.y = min(max(self.game_instance.enemies_boundary,self.hitbox.y), self.game_instance.height-self.size_y)
+            self.rect.x = min(max(0, self.rect.x), self.game_instance.width - self.rect.width)
+            self.rect.y = min(max(self.game_instance.enemies_boundary,self.rect.y), self.game_instance.height-self.rect.height)
+
+        def rotate(self):
+            self.image = pygame.image.load(self.game_instance.enemy_sprite).convert()
+            x = self.rect.x
+            y = self.rect.y
+            if self.speed_y != 0:
+                angle = int(math.atan(self.speed_x/self.speed_y)*180/math.pi)
+            else:
+                angle = 90
+            if self.speed_y > 0:
+                angle += 180
+            self.image = pygame.transform.rotate(self.image,angle)
+            self.rect = self.image.get_rect()
+            self.rect.x = x
+            self.rect.y = y
+
 
     class EnemyBullet:
         def __init__(self,game_instance,x, y):
             self.game_instance = game_instance
             self.spawn_time = self.game_instance.time
-            size_x = 25
-            size_y = 25
-            self.hitbox = pygame.Rect(x, y, size_x, size_y)
-            self.speed_x = self.game_instance.player.hitbox.centerx - self.hitbox.centerx + random.randint(-300, 300)
-            self.speed_y = self.game_instance.player.hitbox.centery - self.hitbox.centery + random.randint(-300, 300)
+            self.image = pygame.image.load(self.game_instance.bullet_sprite).convert()
+            self.rect = self.image.get_rect()
+            self.rect.x = x
+            self.rect.y = y
+            self.speed_x = self.game_instance.player.rect.centerx - self.rect.centerx + random.randint(-300, 300)
+            self.speed_y = self.game_instance.player.rect.centery - self.rect.centery + random.randint(-300, 300)
             self.normalizer = self.game_instance.bullet_relative_speed*self.game_instance.speed / (math.sqrt(self.speed_x ** 2 + self.speed_y ** 2) + 1)
             self.direction = (int(self.normalizer * self.speed_x), int(self.normalizer * self.speed_y))
             self.to_delete = False
 
         def move(self):
-            self.speed_x = (1-self.game_instance.bullet_targeting) * self.speed_x + self.game_instance.bullet_targeting*(self.game_instance.player.hitbox.centerx - self.hitbox.centerx)
-            self.speed_y = (1-self.game_instance.bullet_targeting) * self.speed_y + self.game_instance.bullet_targeting*(self.game_instance.player.hitbox.centery - self.hitbox.centery)
+            self.speed_x = (1-self.game_instance.bullet_targeting) * self.speed_x + self.game_instance.bullet_targeting*(self.game_instance.player.rect.centerx - self.rect.centerx)
+            self.speed_y = (1-self.game_instance.bullet_targeting) * self.speed_y + self.game_instance.bullet_targeting*(self.game_instance.player.rect.centery - self.rect.centery)
             self.normalizer = self.game_instance.bullet_relative_speed*self.game_instance.speed / (math.sqrt(self.speed_x ** 2 + self.speed_y ** 2) + 1)
             self.direction = (int(self.normalizer * self.speed_x), int(self.normalizer * self.speed_y))
-            self.hitbox.move_ip(*self.direction)
+            self.rect.move_ip(*self.direction)
             self.delete()
             self.check_for_collisions()
+            self.rotate()
 
         def delete(self):
             #if self.game_instance.time-self.spawn_time == 500:
                 #self.to_delete = True
-            if not (0 < self.hitbox.x <= self.game_instance.width) :
+            if not (0 < self.rect.x <= self.game_instance.width) :
                 self.to_delete = True
-            if not (0 < self.hitbox.y <= self.game_instance.height) :
+            if not (0 < self.rect.y <= self.game_instance.height) :
                 self.to_delete = True
 
         def check_for_collisions(self):
-            if self.hitbox.colliderect(self.game_instance.player.hitbox):
+            if self.rect.colliderect(self.game_instance.player.rect):
                 self.game_instance.HP -= 1
                 self.to_delete = True
 
-    class Player:
+        def rotate(self):
+            self.image = pygame.image.load(self.game_instance.bullet_sprite).convert()
+            x = self.rect.x
+            y = self.rect.y
+            if self.direction[1] != 0:
+                angle = int(math.atan(self.direction[0]/self.direction[1])*180/math.pi)
+            else:
+                angle = 90
+            if self.direction[1] > 0:
+                angle += 180
+            self.image = pygame.transform.rotate(self.image,angle)
+            self.rect = self.image.get_rect()
+            self.rect.x = x
+            self.rect.y = y
+
+
+    class Player(pygame.sprite.Sprite):
         def __init__(self,game_instance):
             self.game_instance = game_instance
-            self.size_x = 50
-            self.size_y = 50
-            self.hitbox = pygame.Rect(self.game_instance.width // 2, self.game_instance.height//3, self.size_x, self.size_y)
+            self.image = pygame.image.load(game_instance.player_sprite).convert()
+            self.rect = self.image.get_rect()
+            self.rect.x = self.game_instance.width // 2
+            self.rect.y = self.game_instance.height // 3
             self.speed = 0
             self.speed_x = 0
             self.speed_y = 0
@@ -169,8 +212,8 @@ class Game:
         def calculate_speed(self):
             mouse_position = pygame.mouse.get_pos()
 
-            delta_x = mouse_position[0] - self.hitbox.centerx
-            delta_y = mouse_position[1] - self.hitbox.centery
+            delta_x = mouse_position[0] - self.rect.centerx
+            delta_y = mouse_position[1] - self.rect.centery
             speed_magnitude = math.sqrt(delta_x**2+delta_y**2+1)
             if speed_magnitude > 40:
                 self.speed_x = delta_x / math.sqrt(delta_x**2+delta_y**2+1)
@@ -178,38 +221,54 @@ class Game:
             else:
                 self.speed_x = 0
                 self.speed_y = 0
-                #mouse_cursor_x = self.hitbox.centerx + 40 * delta_x / math.sqrt(delta_x**2+delta_y**2+1) BLOKOWANIE MYSZKI Z DALA OD GRACZA
-                #mouse_cursor_y =  self.hitbox.centery + 40 * delta_y / math.sqrt(delta_x**2+delta_y**2+1)
-                #pygame.mouse.set_pos(mouse_cursor_x,mouse_cursor_y)
 
         def move(self):
             self.calculate_speed()
             self.direction = (int(self.game_instance.speed * self.speed_x), int(self.game_instance.speed * self.speed_y))
-            self.hitbox.move_ip(*self.direction)
+            self.rect.move_ip(*self.direction)
             self.bound()
+            self.rotate()
             if pygame.mouse.get_pressed()[0]:
                 self.shoot()
 
         def bound(self):
-            self.hitbox.x = min(max(0, self.hitbox.x), self.game_instance.width - self.hitbox.width)
-            self.hitbox.y = min(max(0,self.hitbox.y), 2*self.game_instance.height // 3)
+            self.rect.x = min(max(0, self.rect.x), self.game_instance.width - self.rect.width)
+            self.rect.y = min(max(0,self.rect.y), 2*self.game_instance.height // 3)
+
+        def rotate(self):
+            self.image = pygame.image.load(self.game_instance.player_sprite).convert()
+            x = self.rect.x
+            y = self.rect.y
+            if self.direction[1] != 0:
+                angle = int(math.atan(self.direction[0]/self.direction[1])*180/math.pi)
+            else:
+                angle = 90
+            if self.direction[1] > 0:
+                angle += 180
+            self.image = pygame.transform.rotate(self.image,angle)
+            self.rect = self.image.get_rect()
+            self.rect.x = x
+            self.rect.y = y
 
         def shoot(self):
             if self.game_instance.time - self.last_shot > 100:
                 self.last_shot = self.game_instance.time
-                bullet_x = self.hitbox.centerx
-                bullet_y = self.hitbox.centery
+                bullet_x = self.rect.centerx
+                bullet_y = self.rect.centery
                 self.game_instance.player_bullets.append(Game.PlayerBullet(self.game_instance,bullet_x, bullet_y))
 
     class PowerUp:
         def __init__(self,game_instance):
             self.game_instance = game_instance
-            self.hitbox = pygame.Rect(game_instance.width//2,game_instance.height//4,50,50)
+            self.image = pygame.image.load(game_instance.power_up_sprite).convert()
+            self.rect = self.image.get_rect()
+            self.rect.x = game_instance.width//2
+            self.rect.y = game_instance.height//3
             self.exists = False
             self.time_since_last_collection = 0
 
         def spawn_or_collect(self):
-            if self.hitbox.colliderect(self.game_instance.player.hitbox) and self.exists:
+            if self.rect.colliderect(self.game_instance.player.rect) and self.exists:
                 self.collected()
             elif not self.exists and self.game_instance.time - self.time_since_last_collection == self.game_instance.power_up_risky_time: #300
                 self.restore_difficulty()
@@ -244,20 +303,21 @@ class Game:
     class PlayerBullet:
         def __init__(self,game_instance,x, y):
             self.game_instance = game_instance
-            size_x = 25
-            size_y = 25
-            self.hitbox = pygame.Rect(x, y, size_x, size_y)
-            self.spawn_time = 0
+            self.image = pygame.image.load(game_instance.bullet_sprite).convert()
+            self.rect = self.image.get_rect()
+            self.rect.x = x
+            self.rect.y = y
+            self.spawn_time = game_instance.time
             mouse_position = pygame.mouse.get_pos()
-            self.speed_x = mouse_position[0] - self.hitbox.x
-            self.speed_y = mouse_position[1] - self.hitbox.y
+            self.speed_x = mouse_position[0] - self.rect.x
+            self.speed_y = mouse_position[1] - self.rect.y
             self.normalizer = self.game_instance.bullet_relative_speed*self.game_instance.speed / (math.sqrt(self.speed_x ** 2 + self.speed_y ** 2) + 1)
             self.direction = (int(self.normalizer * self.speed_x), int(self.normalizer * self.speed_y))
             self.to_delete = False
 
         def find_closest_enemy(self):
-            enemies = [(enemy.hitbox.centerx,enemy.hitbox.centery) for enemy in self.game_instance.enemies]
-            enemies.sort(key = lambda enemy:(enemy[0]-self.hitbox.centerx)**2+(enemy[1]-self.hitbox.centery)**2)
+            enemies = [(enemy.rect.centerx,enemy.rect.centery) for enemy in self.game_instance.enemies]
+            enemies.sort(key = lambda enemy:(enemy[0]-self.rect.centerx)**2+(enemy[1]-self.rect.centery)**2)
             if enemies:
                 return enemies[0]
             else:
@@ -265,24 +325,40 @@ class Game:
 
         def move(self):
             closest_enemy = self.find_closest_enemy()
-            self.speed_x = (1-self.game_instance.bullet_targeting) * self.speed_x + self.game_instance.bullet_targeting*(closest_enemy[0]- self.hitbox.centerx)
-            self.speed_y = (1-self.game_instance.bullet_targeting) * self.speed_y + self.game_instance.bullet_targeting*(closest_enemy[1] - self.hitbox.centery)
+            self.speed_x = (1-self.game_instance.bullet_targeting) * self.speed_x + self.game_instance.bullet_targeting*(closest_enemy[0]- self.rect.centerx)
+            self.speed_y = (1-self.game_instance.bullet_targeting) * self.speed_y + self.game_instance.bullet_targeting*(closest_enemy[1] - self.rect.centery)
             self.normalizer = self.game_instance.bullet_relative_speed*self.game_instance.speed / (math.sqrt(self.speed_x ** 2 + self.speed_y ** 2) + 1)
             self.direction = (int(self.normalizer * self.speed_x), int(self.normalizer * self.speed_y))
-            self.hitbox.move_ip(*self.direction)
+            self.rect.move_ip(*self.direction)
             self.delete()
             self.checK_for_collisions()
+            self.rotate()
 
         def delete(self):
             if self.game_instance.time-self.spawn_time == 500:
                 self.to_delete = True
-            if not (0 < self.hitbox.x <= self.game_instance.width) :
+            if not (0 < self.rect.x <= self.game_instance.width) :
                 self.to_delete = True
-            if not (0 < self.hitbox.y <= self.game_instance.height) :
+            if not (0 < self.rect.y <= self.game_instance.height) :
                 self.to_delete = True
 
         def checK_for_collisions(self):
-            collisions = self.hitbox.collidelistall([enemy.hitbox for enemy in self.game_instance.enemies])
+            collisions = self.rect.collidelistall([enemy.rect for enemy in self.game_instance.enemies])
             if collisions:
                 self.to_delete = True
                 self.game_instance.enemies.pop(collisions[0])
+
+        def rotate(self):
+            self.image = pygame.image.load(self.game_instance.bullet_sprite).convert()
+            x = self.rect.x
+            y = self.rect.y
+            if self.direction[1] != 0:
+                angle = int(math.atan(self.direction[0]/self.direction[1])*180/math.pi)
+            else:
+                angle = 90
+            if self.direction[1] > 0:
+                angle += 180
+            self.image = pygame.transform.rotate(self.image,angle)
+            self.rect = self.image.get_rect()
+            self.rect.x = x
+            self.rect.y = y
