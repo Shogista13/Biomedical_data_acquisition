@@ -8,7 +8,7 @@ class Data:
         self.path = path
         column_titles = ["HP","Power up","Player x", "Player y", "Player speed_x", "Player speed_y", "Player bullet x", "Player bullet y", "Player bullet speed_x",
                          "Player bullet speed_y",'Enemy x', "Enemy y","Enemy speed_x", "Enemy speed_y", "Enemy bullet x", "Enemy bullet y",
-                         "Enemy bullet speed_x", "Enemy bullet speed_y", "Humidity", "Temperature", "Skin conductance", "Relative blood volume"]
+                         "Enemy bullet speed_x", "Enemy bullet speed_y", "Humidity", "Temperature", "Skin conductance", "Relative blood volume","Accelerations"]
         self.df = pd.DataFrame(columns=column_titles)
 
     def get_data(self,sensor_data,player,enemies,enemy_bullets, player_bullets,HP,power_up):
@@ -31,11 +31,12 @@ class Data:
         humidity = sensor_data[0]
         temperature = sensor_data[1]
         skin_conductance = sensor_data[2]
-        relative_blood_volume = sensor_data[3:]
+        relative_blood_volume = sensor_data[3:24]
+        accelerations = sensor_data[24:]
         self.df.loc[len(self.df)] = [HP,power_up, player_x, player_y, player_speed_x, player_speed_y,player_bullet_x,player_bullet_y,
                                      player_bullet_speed_x,player_bullet_speed_y,enemy_x, enemy_y, enemy_speed_x,
                            enemy_speed_y, enemy_bullet_x, enemy_bullet_y, enemy_bullet_speed_x, enemy_bullet_speed_y, humidity, temperature,
-                           skin_conductance,relative_blood_volume]
+                           skin_conductance,relative_blood_volume,accelerations]
 
     def save_data(self):
         pd.DataFrame.to_csv(self.df, self.path +'/unprocessed/' + self.phase)

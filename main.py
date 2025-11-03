@@ -11,7 +11,7 @@ run = True
 
 form = Form()
 path = form.path
-port_name = 'COM6'
+port_name = 'COM7'
 phase = 'control'
 #period,speed,HP,bullet_relative_speed,bullet_targeting,power_up_strenght,power_up_gradually,power_up_risky_time,
 #power_up_animated
