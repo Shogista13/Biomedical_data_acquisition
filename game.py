@@ -99,7 +99,7 @@ class Game:
         def __init__(self,game_instance, x, y):
             self.game_instance = game_instance
             self.image = pygame.image.load(game_instance.enemy_sprite).convert()
-            self.rect = self.image.get_rect()
+            self.rect = self.image.get_rect(center=(25,25))
             self.rect.x = x
             self.rect.y = y
             self.speed_x = 0
@@ -138,7 +138,7 @@ class Game:
             if self.speed_y > 0:
                 angle += 180
             self.image = pygame.transform.rotate(self.image,angle)
-            self.rect = self.image.get_rect()
+            self.rect = self.image.get_rect(center=(25,25))
             self.rect.x = x
             self.rect.y = y
 
@@ -148,9 +148,10 @@ class Game:
             self.game_instance = game_instance
             self.spawn_time = self.game_instance.time
             self.image = pygame.image.load(self.game_instance.bullet_sprite).convert()
-            self.rect = self.image.get_rect()
+            self.rect = self.image.get_rect(center=(22.5,22.5), width=20)
             self.rect.x = x
             self.rect.y = y
+            #self.hit
             self.speed_x = self.game_instance.player.rect.centerx - self.rect.centerx + random.randint(-300, 300)
             self.speed_y = self.game_instance.player.rect.centery - self.rect.centery + random.randint(-300, 300)
             self.normalizer = self.game_instance.bullet_relative_speed*self.game_instance.speed / (math.sqrt(self.speed_x ** 2 + self.speed_y ** 2) + 1)
@@ -191,7 +192,7 @@ class Game:
             if self.direction[1] > 0:
                 angle += 180
             self.image = pygame.transform.rotate(self.image,angle)
-            self.rect = self.image.get_rect()
+            self.rect = self.image.get_rect(center=(22.5,22.5), width=20)
             self.rect.x = x
             self.rect.y = y
 
@@ -200,7 +201,7 @@ class Game:
         def __init__(self,game_instance):
             self.game_instance = game_instance
             self.image = pygame.image.load(game_instance.player_sprite).convert()
-            self.rect = self.image.get_rect()
+            self.rect = self.image.get_rect(center=(25,25))
             self.rect.x = self.game_instance.width // 2
             self.rect.y = self.game_instance.height // 3
             self.speed = 0
@@ -246,7 +247,7 @@ class Game:
             if self.direction[1] > 0:
                 angle += 180
             self.image = pygame.transform.rotate(self.image,angle)
-            self.rect = self.image.get_rect()
+            self.rect = self.image.get_rect(center=(22.5,22.5))
             self.rect.x = x
             self.rect.y = y
 
@@ -304,7 +305,7 @@ class Game:
         def __init__(self,game_instance,x, y):
             self.game_instance = game_instance
             self.image = pygame.image.load(game_instance.bullet_sprite).convert()
-            self.rect = self.image.get_rect()
+            self.rect = self.image.get_rect(center=(22.5,22.5), width=20)
             self.rect.x = x
             self.rect.y = y
             self.spawn_time = game_instance.time
@@ -359,6 +360,6 @@ class Game:
             if self.direction[1] > 0:
                 angle += 180
             self.image = pygame.transform.rotate(self.image,angle)
-            self.rect = self.image.get_rect()
+            self.rect = self.image.get_rect(center=(22.5,22.5), width=20)
             self.rect.x = x
             self.rect.y = y
