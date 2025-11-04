@@ -11,20 +11,20 @@ run = True
 
 form = Form()
 path = form.path
-port_name = 'COM6'
+#port_name = 'COM7'
 phase = 'control'
 #period,speed,HP,bullet_relative_speed,bullet_targeting,power_up_strenght,power_up_gradually,power_up_risky_time,
-#power_up_animated
-phases = {'control':[40,10,10,0.7,0.005,3,False,500,False],
-#'more reward, more risky time':[40,10,10,0.7,0.005,4,False,600,False],
-'reward in installments':[40,10,10,0.7,0.005,3,True,500,False],
-'power up animated with sound effect':[40,10,10,0.7,0.005,2,False,500,True]
+#power_up_animated,subdued_color
+phases = {'control':[40,10,10,0.7,0.005,3,False,500,False,True],
+'reward in installments':[40,10,10,0.7,0.005,3,True,500,False,False],
+'power up animated with sound effect':[40,10,10,0.7,0.005,2,False,500,True,False],
+'subdued colors':[40,10,10,0.7,0.005,3,False,500,False,True],
 }
 
 game_instance = game.Game(*phases[phase])
-database = Data(path,phase)
+#database = Data(path,phase)
 
-port = serial.Serial(port_name, 115200, timeout=None)
+#port = serial.Serial(port_name, 115200, timeout=None)
 data_splitted = ""
 
 def acquire_data():
@@ -33,8 +33,8 @@ def acquire_data():
         data = port.readline().decode('utf-8').strip()
         data_splitted = [float(i.strip('[]')) for i in data.split(",")]
 
-data_acquisition_thread = threading.Thread(target=acquire_data)
-data_acquisition_thread.start()
+#data_acquisition_thread = threading.Thread(target=acquire_data)
+#data_acquisition_thread.start()
 
 while run:
     for event in pygame.event.get():
@@ -43,12 +43,12 @@ while run:
     keys = pygame.key.get_pressed()
     if keys[pygame.K_ESCAPE]:
         run = False
-        data_acquisition_thread.join()
-        database.save_data()
+        #data_acquisition_thread.join()
+        #database.save_data()
     game_instance.spawn_enemies()
     game_instance.move_objects()
     game_instance.draw_objects()
-    if game_instance.time % 20 == 0 and game_instance.time > 500:
-        database.get_data(data_splitted,game_instance.player,game_instance.enemies,game_instance.enemy_bullets,game_instance.player_bullets,game_instance.HP,game_instance.power_up.exists)
+    #if game_instance.time % 20 == 0 and game_instance.time > 500:
+        #database.get_data(data_splitted,game_instance.player,game_instance.enemies,game_instance.enemy_bullets,game_instance.player_bullets,game_instance.HP,game_instance.power_up.exists)
     pygame.display.update()
     pygame.time.delay(10)

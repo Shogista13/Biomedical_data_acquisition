@@ -25,8 +25,8 @@ def get_gsr(signal):
     conductance = list(map(calculate_conductance,signal))
     return biosppy_decomposition(conductance,sampling_rate = 5) #zwraca EDA i EDR
 
-def normalize_pulse_volume(sample,min,max): #normalizuje do [0;1]
-    return (sample-min)/(max-min)
+def normalize_pulse_volume(sample,min,max): #normalizuje do [-1;1]
+    return 2*(sample-min)/(max-min)-1
 
 def get_pulse(signal):
     minimum = min(signal)
