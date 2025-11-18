@@ -18,8 +18,8 @@ def calculate_collection_time(dataframe):
     return time_to_analyze
 
 def calculate_conductance(sample):
-    voltage = 5 / 65535 * sample
-    return 1000*(5 - voltage) / (10 * voltage) #w mikrosiemensach
+    voltage = 3.3 / 65535 * sample
+    return (3.3 - voltage) / (10 * voltage) #w mikrosiemensach
 
 def get_gsr(signal):
     conductance = list(map(calculate_conductance,signal))
