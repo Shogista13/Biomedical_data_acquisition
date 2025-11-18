@@ -117,6 +117,7 @@ class Game:
             self.image = pygame.image.load(self.sprite_path).convert()
             self.game_instance = game_instance
             self.rect = self.image.get_rect()
+            self.mask = pygame.mask.from_surface(self.image)
             self.rect.x = x
             self.rect.y = y
             self.speed_x = 0
@@ -285,12 +286,12 @@ class Game:
 
         def check_for_collisions(self):
             if isinstance(self, Game.PlayerBullet):
-                collisions = self.rect.collidelistall([enemy.rect for enemy in self.game_instance.enemies])
+                collisions = [enemy for enemy in self.game_instance.enemies if self.mask.overlap(enemy.mask,(self.rect.x-enemy.rect.x,self.rect.y-enemy.rect.y))]
                 if collisions:
                     self.to_delete = True
-                    self.game_instance.enemies.pop(collisions[0])
+                    self.game_instance.enemies.remove(collisions[0])
             elif isinstance(self, Game.EnemyBullet):
-                if self.rect.colliderect(self.game_instance.player.rect):
+                if self.mask.overlap(self.game_instance.player.mask,(self.rect.x-self.game_instance.player.rect.x,self.rect.y-self.game_instance.player.rect.y)):
                     self.game_instance.HP -= 1
                     self.to_delete = True
 
