@@ -64,12 +64,11 @@ class Game:
             self.surface.fill((100,100,100))
             text = self.font.render(f'Time till respawning: {time_till_respawn}', True, (0, 0, 0))
             textRect = text.get_rect()
-            textRect.center = ((self.width - textRect.width) // 2 , (self.height - textRect.height // 2))
+            textRect.center = (self.width // 2 ,self.height// 2)
             self.surface.blit(text, textRect)
             pygame.display.update()
             time_till_respawn -= 1
             pygame.time.delay(990)
-        self.reinitialize()
 
     def move_objects(self):
         self.player.move()
@@ -107,18 +106,10 @@ class Game:
         self.spawn_enemies()
         self.move_objects()
         self.draw_objects()
-        if self.HP == 0:
+        if self.HP < 1:
             self.death()
         pygame.display.update()
         pygame.time.delay(10)
-
-    def reinitialize(self):
-        self.time = 0
-        self.enemies = []
-        self.enemy_bullets = []
-        self.player_bullets = []
-        self.HP = self.max_HP
-        self.player = Game.Player(self)
 
     class GameObject:
         def __init__(self, game_instance, x, y,sprite_path):
@@ -291,7 +282,6 @@ class Game:
                     return (self.game_instance.width//2,self.game_instance.height//2)
             elif isinstance(self, Game.EnemyBullet):
                 return (self.game_instance.player.rect.centerx, self.game_instance.player.rect.centery)
-
 
         def check_for_collisions(self):
             if isinstance(self, Game.PlayerBullet):
