@@ -1,7 +1,6 @@
 import pygame
 import random
 import math
-import math
 
 class Game:
     def __init__(self,period,speed,HP,bullet_relative_speed,bullet_targeting,power_up_strength,power_up_gradually,power_up_risky_time,power_up_animated,subdued_colors):
@@ -14,6 +13,7 @@ class Game:
         self.height = info.current_h
         self.surface = pygame.display.set_mode((self.width, self.height), pygame.FULLSCREEN)
 
+        self.subdued_colors = subdued_colors
         self.player_sprite = "Resprite_exports/Player"+str(int(subdued_colors))+".gif"
         self.enemy_sprite = "Resprite_exports/Enemy"+str(int(subdued_colors))+".gif"
         self.bullet_sprite = "Resprite_exports/Bullet"+str(int(subdued_colors))+".gif"
@@ -24,15 +24,15 @@ class Game:
         self.enemies = []
         self.enemy_bullets = []
         self.player_bullets = []
-        self.HP = HP
+        self.player = Game.Player(self)
+        self.max_HP = HP
 
         self.bullet_targeting = bullet_targeting
         self.bullet_relative_speed = bullet_relative_speed
         self.period = period
         self.speed = speed
         self.max_enemies = 5
-
-        self.player = Game.Player(self)
+        self.HP = HP
 
         self.power_up = Game.PowerUp(self)
         self.power_up_strength = power_up_strength
@@ -43,13 +43,13 @@ class Game:
         self.enemies_boundary = 2*self.height // 3
 
     def display_HP(self):
-        text = self.font.render(f'HP: {self.HP}', True,(0,0,0))
+        text = self.font.render(f'HP: {self.HP}', True,(255,255,255))
         textRect = text.get_rect()
         textRect.center = (self.width - textRect.width//2-50, textRect.height//2 + 50)
         self.surface.blit(text,textRect)
 
     def display_time(self):
-        text = self.font.render(f'Time: {self.time // 100}', True, (0, 0, 0))
+        text = self.font.render(f'Time: {self.time // 100}', True, (255, 255, 255))
         textRect = text.get_rect()
         textRect.center = (self.width - textRect.width // 2 - 50, textRect.height // 2 + 140)
         self.surface.blit(text, textRect)
@@ -57,6 +57,19 @@ class Game:
     def spawn_enemies(self):
         if self.time % self.period == 0 and len(self.enemies) < self.max_enemies:
             self.enemies.append(Game.Enemy(self,random.randint(50, self.width - 50), random.randint(self.enemies_boundary, self.enemies_boundary + self.height//3)))
+
+    def death(self):
+        time_till_respawn = 10
+        while time_till_respawn > 0:
+            self.surface.fill((100,100,100))
+            text = self.font.render(f'Time till respawning: {time_till_respawn}', True, (0, 0, 0))
+            textRect = text.get_rect()
+            textRect.center = ((self.width - textRect.width) // 2 , (self.height - textRect.height // 2))
+            self.surface.blit(text, textRect)
+            pygame.display.update()
+            time_till_respawn -= 1
+            pygame.time.delay(990)
+        self.reinitialize()
 
     def move_objects(self):
         self.player.move()
@@ -89,6 +102,23 @@ class Game:
         self.speed = speed
         self.bullet_targeting = bullet_targeting
         self.bullet_relative_speed = bullet_relative_speed
+
+    def play(self):
+        self.spawn_enemies()
+        self.move_objects()
+        self.draw_objects()
+        if self.HP == 0:
+            self.death()
+        pygame.display.update()
+        pygame.time.delay(10)
+
+    def reinitialize(self):
+        self.time = 0
+        self.enemies = []
+        self.enemy_bullets = []
+        self.player_bullets = []
+        self.HP = self.max_HP
+        self.player = Game.Player(self)
 
     class GameObject:
         def __init__(self, game_instance, x, y,sprite_path):

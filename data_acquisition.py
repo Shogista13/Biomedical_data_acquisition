@@ -34,4 +34,3 @@ class Data:
 
     def save_data(self):
         pd.DataFrame.to_csv(self.df, self.path +'/unprocessed/' + self.phase)
-        #process_data(self.df,self.path,self.phase)
