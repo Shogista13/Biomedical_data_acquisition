@@ -8,7 +8,7 @@ time = 0
 form = Form()
 path = form.path
 
-phase = 'control'
+phase = 'reward in installments'#"control"
 #period,speed,HP,bullet_relative_speed,bullet_targeting,power_up_strenght,power_up_gradually,power_up_risky_time,
 #power_up_animated,subdued_color
 phases = {'control':[40,10,10,0.7,0.005,3,False,500,False,False],
