@@ -31,6 +31,7 @@ while run and time < 18000:
         run = False
     game_instance.play()
     if game_instance.HP == 0:
+        pygame.mixer.stop()
         game_instance = game.Game(*phases[phase])
     if game_instance.time % 20 == 0 and game_instance.time > 500 and game_instance.HP > 0:
         database.get_data(game_instance.player,game_instance.enemies,game_instance.enemy_bullets,game_instance.player_bullets,game_instance.HP,game_instance.power_up.exists)
