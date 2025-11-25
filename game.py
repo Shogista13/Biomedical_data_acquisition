@@ -3,10 +3,20 @@ import random
 import math
 
 class Game:
-    def __init__(self,period,speed,HP,bullet_relative_speed,bullet_targeting,power_up_strength,power_up_gradually,power_up_risky_time,power_up_animated,subdued_colors):
+    def __init__(self,period,speed,HP,bullet_relative_speed,bullet_targeting,power_up_strength,power_up_gradually,power_up_risky_time,power_up_animated,subdued_colors,music):
         pygame.init()
         pygame.font.init()
         self.font = pygame.font.Font(None, 80)
+
+        if power_up_animated:
+            pygame.mixer.init()
+            self.collection_sound = pygame.mixer.Sound("Sound.wav")
+        elif music == 1:
+            self.music =  pygame.mixer.Sound("game_music/busytheme.wav")
+            self.music.play(-1)
+        elif music == 2:
+            self.music =  pygame.mixer.Sound("game_music/softmusic.wav")
+            self.music.play(-1)
 
         info = pygame.display.Info()
         self.width = info.current_w
@@ -17,7 +27,7 @@ class Game:
         self.player_sprite = "Resprite_exports/Player"+str(int(subdued_colors))+".gif"
         self.enemy_sprite = "Resprite_exports/Enemy"+str(int(subdued_colors))+".gif"
         self.bullet_sprite = "Resprite_exports/Bullet"+str(int(subdued_colors))+".gif"
-        self.power_up_sprite = "Resprite_exports/Medkit"+str(int(subdued_colors))+".gif"
+        self.power_up_sprite = "Resprite_exports/Medkit"+str(int(subdued_colors))
         self.background = pygame.image.load("Resprite_exports/Background"+str(int(subdued_colors))+".jpg").convert()
 
         self.time = 0
@@ -141,7 +151,9 @@ class Game:
     class PowerUp:
         def __init__(self,game_instance):
             self.game_instance = game_instance
-            self.image = pygame.image.load(game_instance.power_up_sprite).convert()
+            self.sprite_number = 0
+            self.image = pygame.image.load(game_instance.power_up_sprite+str(self.sprite_number)+".gif").convert()
+            self.mask = pygame.mask.from_surface(self.image)
             self.rect = self.image.get_rect()
             self.rect.x = game_instance.width//2
             self.rect.y = game_instance.height//3
@@ -149,28 +161,32 @@ class Game:
             self.time_since_last_collection = 0
 
         def spawn_or_collect(self):
-            if self.rect.colliderect(self.game_instance.player.rect) and self.exists:
+            self.special_effects()
+            if self.mask.overlap(self.game_instance.player.mask,(self.rect.x-self.game_instance.player.rect.x,self.rect.y-self.game_instance.player.rect.y)) and self.exists:
                 self.collected()
-            elif not self.exists and self.game_instance.time - self.time_since_last_collection == self.game_instance.power_up_risky_time: #300
+            elif not self.exists and self.game_instance.time - self.time_since_last_collection == self.game_instance.power_up_risky_time:
                 self.restore_difficulty()
             elif not self.exists and self.game_instance.time - self.time_since_last_collection == 3000:
                 self.exists = True
 
         def collected(self):
-            if self.game_instance.power_up_animated:
-                self.play_animation()
-            self.exists = False
-            self.time_since_last_collection = self.game_instance.time
-            self.game_instance.bullet_targeting += 0.0025
-            self.game_instance.bullet_relative_speed += 0.05
-            self.game_instance.period -= 10
-            if not self.game_instance.power_up_gradually:
-                self.game_instance.HP += self.game_instance.power_up_strength
-            else:
+            if self.exists and self.game_instance.time - self.time_since_last_collection > 110:
+                self.exists = False
+                self.time_since_last_collection = self.game_instance.time
+                self.game_instance.bullet_targeting += 0.0025
+                self.game_instance.bullet_relative_speed += 0.05
+                self.game_instance.period -= 10
+                if not self.game_instance.power_up_gradually and not self.game_instance.power_up_animated:
+                    self.game_instance.HP += self.game_instance.power_up_strength
+
+        def special_effects(self):
+            if self.game_instance.power_up_gradually:
                 self.heal_gradually()
+            elif self.game_instance.power_up_animated:
+                self.play_animation()
 
         def heal_gradually(self):
-            if (self.game_instance.time - self.time_since_last_collection)%1000 == 0 and 0<(self.game_instance.time - self.time_since_last_collection)<= self.game_instance.power_up_strength * 1000:
+            if (self.game_instance.time - self.time_since_last_collection)%100 == 0 and self.game_instance.time - self.time_since_last_collection<= self.game_instance.power_up_strength * 100:
                 self.game_instance.HP += 1
 
         def restore_difficulty(self):
@@ -179,7 +195,12 @@ class Game:
             self.game_instance.period += 10
 
         def play_animation(self):
-            pass
+            if self.game_instance.time - self.time_since_last_collection > 100:
+                self.exists = False
+            elif self.game_instance.time - self.time_since_last_collection % 1000 == 0:
+                self.sprite_number += 1
+                self.sprite_number %= 10
+                self.image = pygame.image.load(self.game_instance.power_up_sprite + str(self.sprite_number)+".gif").convert()
 
     class Sprite(GameObject):
         def __init__(self, game_instance, x, y, sprite_path):
@@ -188,8 +209,7 @@ class Game:
 
         def calculate_speed(self):
             if isinstance(self, Game.Enemy):
-                basic_component = (2 * (
-                            int(((self.game_instance.time + 50) / 100)) % 2) - 1) * self.game_instance.speed // 10
+                basic_component = (2 * (int(((self.game_instance.time + 50) / 100)) % 2) - 1) * self.game_instance.speed // 10
                 chaotic_component_x = int(4 * math.sin(2 * math.pi * self.rect.x))
                 chaotic_component_y = int(4 * math.sin(2 * math.pi * self.rect.y))
                 centralizing_component_x = (self.game_instance.width // 2 - self.rect.x) // 100
