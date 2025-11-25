@@ -13,9 +13,11 @@ class Game:
             self.collection_sound = pygame.mixer.Sound("Sound.wav")
         elif music == 1:
             self.music =  pygame.mixer.Sound("game_music/busytheme.wav")
+            self.music.set_volume(0.08)
             self.music.play(-1)
         elif music == 2:
             self.music =  pygame.mixer.Sound("game_music/softmusic.wav")
+            self.music.set_volume(0.08)
             self.music.play(-1)
 
         info = pygame.display.Info()
@@ -31,6 +33,7 @@ class Game:
         self.background = pygame.image.load("Resprite_exports/Background"+str(int(subdued_colors))+".jpg").convert()
 
         self.time = 0
+        self.points = 0
         self.enemies = []
         self.enemy_bullets = []
         self.player_bullets = []
@@ -64,12 +67,19 @@ class Game:
         textRect.center = (self.width - textRect.width // 2 - 50, textRect.height // 2 + 140)
         self.surface.blit(text, textRect)
 
+    def display_points(self):
+        text = self.font.render(f'Points: {self.points}', True, (255, 255, 255))
+        textRect = text.get_rect()
+        textRect.center = (self.width - textRect.width // 2 - 50, textRect.height // 2 + 230)
+        self.surface.blit(text, textRect)
+
     def spawn_enemies(self):
         if self.time % self.period == 0 and len(self.enemies) < self.max_enemies:
             self.enemies.append(Game.Enemy(self,random.randint(50, self.width - 50), random.randint(self.enemies_boundary, self.enemies_boundary + self.height//3)))
 
     def death(self):
         time_till_respawn = 10
+        pygame.mixer.stop()
         while time_till_respawn > 0:
             self.surface.fill((100,100,100))
             text = self.font.render(f'Time till respawning: {time_till_respawn}', True, (0, 0, 0))
@@ -106,6 +116,7 @@ class Game:
         self.surface.blit(self.player.image, self.player.rect)
         self.display_HP()
         self.display_time()
+        self.display_points()
 
     def change_difficulty(self, speed, bullet_targeting, bullet_relative_speed):
         self.speed = speed
@@ -310,6 +321,7 @@ class Game:
                 if collisions:
                     self.to_delete = True
                     self.game_instance.enemies.remove(collisions[0])
+                    self.game_instance.points += 1
             elif isinstance(self, Game.EnemyBullet):
                 if self.mask.overlap(self.game_instance.player.mask,(self.rect.x-self.game_instance.player.rect.x,self.rect.y-self.game_instance.player.rect.y)):
                     self.game_instance.HP -= 1
