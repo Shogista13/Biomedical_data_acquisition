@@ -3,14 +3,20 @@ import random
 import math
 
 class Game:
-    def __init__(self,period,speed,HP,bullet_relative_speed,bullet_targeting,power_up_strength,power_up_gradually,power_up_risky_time,power_up_animated,subdued_colors):
+    def __init__(self,period,speed,HP,bullet_relative_speed,bullet_targeting,power_up_strength,power_up_gradually,power_up_risky_time,power_up_animated,subdued_colors,music):
         pygame.init()
         pygame.font.init()
         self.font = pygame.font.Font(None, 80)
 
         if power_up_animated:
             pygame.mixer.init()
-            self.collection_sound = pygame.mixer.sound("Sound")
+            self.collection_sound = pygame.mixer.Sound("Sound.wav")
+        elif music == 1:
+            self.music =  pygame.mixer.Sound("game_music/busytheme.wav")
+            self.music.play(-1)
+        elif music == 2:
+            self.music =  pygame.mixer.Sound("game_music/softmusic.wav")
+            self.music.play(-1)
 
         info = pygame.display.Info()
         self.width = info.current_w
