@@ -52,10 +52,23 @@ def get_HR(signal,peaks,sampling_rate):
         HR.append((len(heart_beats)-1)/(heart_beats[-1]-heart_beats[0])*500*60)
     return HR
 
-def get_timeline(HP):
-    for i,value in enumerate(HP):
-        if HP == 0:
+def get_timeline(HP,sampling_rate):
+    time = 0
+    timeline = []
+    for value in HP:
+        timeline.append(time*sampling_rate/5)
+        if value == 0:
             time += 1000
+        time += 1
+    return timeline
+
+def get_time_of_collection(timeline,exists,sampling_rate):
+    collection_times = []
+    for i,frame in enumerate(exists[1:]):
+        if exists[i-1] and not frame:
+            collection_times.append(timeline[(i-10)/5*sampling_rate:(i+20)/5*sampling_rate])
+    return collection_times
+
 
 
 time = np.array([i for i in range(120001)])

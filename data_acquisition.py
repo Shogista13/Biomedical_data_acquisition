@@ -1,5 +1,5 @@
-#import pandas as pd
-#import os
+import pandas as pd
+import os
 #from data_preprocessing import process_data
 
 class Data:
