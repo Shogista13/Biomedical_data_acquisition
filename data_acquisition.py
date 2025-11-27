@@ -1,6 +1,6 @@
-import pandas as pd
-import os
-from data_preprocessing import process_data
+#import pandas as pd
+#import os
+#from data_preprocessing import process_data
 
 class Data:
     def __init__(self,path,phase):

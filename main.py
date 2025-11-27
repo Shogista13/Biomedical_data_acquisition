@@ -1,14 +1,14 @@
 import game
-from data_acquisition import Data
+#from data_acquisition import Data
 import pygame
-from get_subject_data import Form
+#from get_subject_data import Form
 
 run = True
 time = 0
-form = Form()
-path = form.path
+#form = Form()
+#path = form.path
 
-phase = 'subdued colors'#"control"#'busy music'#
+phase = 'busy music'#"control"#'busy music'#
 #period,speed,HP,bullet_relative_speed,bullet_targeting,power_up_strenght,power_up_gradually,power_up_risky_time,
 #power_up_animated,subdued_color
 phases = {'control':[40,10,10,0.7,0.005,3,False,500,False,False,0],
@@ -20,7 +20,7 @@ phases = {'control':[40,10,10,0.7,0.005,3,False,500,False,False,0],
 }
 
 game_instance = game.Game(*phases[phase])
-database = Data(path,phase)
+#database = Data(path,phase)
 
 while run and time < 18000:
     for event in pygame.event.get():
@@ -33,8 +33,8 @@ while run and time < 18000:
     if game_instance.HP == 0:
         pygame.mixer.stop()
         game_instance = game.Game(*phases[phase])
-    if game_instance.time % 20 == 0 and game_instance.time > 500 and game_instance.HP > 0:
-        database.get_data(game_instance.player,game_instance.enemies,game_instance.enemy_bullets,game_instance.player_bullets,game_instance.HP,game_instance.power_up.exists)
+    #if game_instance.time % 20 == 0 and game_instance.time > 500 and game_instance.HP > 0:
+        #database.get_data(game_instance.player,game_instance.enemies,game_instance.enemy_bullets,game_instance.player_bullets,game_instance.HP,game_instance.power_up.exists)
     time += 1
 
-database.save_data()
+#database.save_data()
