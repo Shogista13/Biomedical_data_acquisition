@@ -1,17 +1,17 @@
 import pandas as pd
 import os
-from data_preprocessing import process_data
+#from data_preprocessing import process_data
 
 class Data:
     def __init__(self,path,phase):
         self.phase = phase
         self.path = path
-        column_titles = ["HP","Power up","Player x", "Player y", "Player speed_x", "Player speed_y", "Player bullet x", "Player bullet y", "Player bullet speed_x",
+        column_titles = ["Time","HP","Power up","Player x", "Player y", "Player speed_x", "Player speed_y", "Player bullet x", "Player bullet y", "Player bullet speed_x",
                          "Player bullet speed_y",'Enemy x', "Enemy y","Enemy speed_x", "Enemy speed_y", "Enemy bullet x", "Enemy bullet y",
-                         "Enemy bullet speed_x", "Enemy bullet speed_y"]
+                         "Enemy bullet speed_x", "Enemy bullet speed_y",]
         self.df = pd.DataFrame(columns=column_titles)
 
-    def get_data(self,player,enemies,enemy_bullets, player_bullets,HP,power_up):
+    def get_data(self,player,enemies,enemy_bullets, player_bullets,HP,power_up,time):
         player_x = player.rect.x
         player_y = player.rect.y
         player_speed_x = player.direction[0]
@@ -28,7 +28,7 @@ class Data:
         enemy_bullet_y = [bullet.rect.y for bullet in enemy_bullets]
         enemy_bullet_speed_x = [bullet.direction[0] for bullet in enemy_bullets]
         enemy_bullet_speed_y = [bullet.direction[1] for bullet in enemy_bullets]
-        self.df.loc[len(self.df)] = [HP,power_up, player_x, player_y, player_speed_x, player_speed_y,player_bullet_x,player_bullet_y,
+        self.df.loc[len(self.df)] = [time,HP,power_up, player_x, player_y, player_speed_x, player_speed_y,player_bullet_x,player_bullet_y,
                                      player_bullet_speed_x,player_bullet_speed_y,enemy_x, enemy_y, enemy_speed_x,
                            enemy_speed_y, enemy_bullet_x, enemy_bullet_y, enemy_bullet_speed_x, enemy_bullet_speed_y]
 
