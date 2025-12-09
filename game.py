@@ -10,7 +10,7 @@ class Game:
 
         if power_up_animated:
             pygame.mixer.init()
-            self.collection_sound = pygame.mixer.Sound("Sound.wav")
+            self.collection_sound = pygame.mixer.Sound("game_music/powerup.wav")
         elif music == 1:
             self.music =  pygame.mixer.Sound("game_music/busytheme.wav")
             self.music.set_volume(0.08)
@@ -172,7 +172,8 @@ class Game:
             self.time_since_last_collection = 0
 
         def spawn_or_collect(self):
-            self.special_effects()
+            if self.game_instance.power_up_gradually:
+                self.heal_gradually()
             if self.mask.overlap(self.game_instance.player.mask,(self.rect.x-self.game_instance.player.rect.x,self.rect.y-self.game_instance.player.rect.y)) and self.exists:
                 self.collected()
             elif not self.exists and self.game_instance.time - self.time_since_last_collection == self.game_instance.power_up_risky_time:
@@ -190,28 +191,24 @@ class Game:
                 if not self.game_instance.power_up_gradually and not self.game_instance.power_up_animated:
                     self.game_instance.HP += self.game_instance.power_up_strength
 
-        def special_effects(self):
-            if self.game_instance.power_up_gradually:
-                self.heal_gradually()
-            elif self.game_instance.power_up_animated:
-                self.play_animation()
-
         def heal_gradually(self):
             if (self.game_instance.time - self.time_since_last_collection)%100 == 0 and self.game_instance.time - self.time_since_last_collection<= self.game_instance.power_up_strength * 100:
                 self.game_instance.HP += 1
+                if self.game_instance.power_up_animated:
+                    self.game_instance.collection_sound.play()
 
         def restore_difficulty(self):
             self.game_instance.bullet_targeting -= 0.0025
             self.game_instance.bullet_relative_speed -= 0.1
             self.game_instance.period += 10
 
-        def play_animation(self):
+        '''def play_animation(self):
             if self.game_instance.time - self.time_since_last_collection > 100:
                 self.exists = False
             elif self.game_instance.time - self.time_since_last_collection % 1000 == 0:
                 self.sprite_number += 1
                 self.sprite_number %= 10
-                self.image = pygame.image.load(self.game_instance.power_up_sprite + str(self.sprite_number)+".gif").convert()
+                self.image = pygame.image.load(self.game_instance.power_up_sprite + str(self.sprite_number)+".gif").convert()'''
 
     class Sprite(GameObject):
         def __init__(self, game_instance, x, y, sprite_path):

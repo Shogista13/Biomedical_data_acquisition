@@ -1,11 +1,10 @@
-
 import pandas as pd
 #from biosppy.signals.ppg import ppg
 #from biosppy.signals.eda import biosppy_decomposition
 from scipy.signal import butter,filtfilt
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import numpy as np
-from copy import deepcopy
+#from copy import deepcopy
 
 def normalize_the_signal(signal,sampling_rate):
     multipliers = []
