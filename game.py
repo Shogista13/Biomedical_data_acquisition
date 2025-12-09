@@ -16,7 +16,7 @@ class Game:
             self.music.set_volume(0.08)
             self.music.play(-1)
         elif music == 2:
-            self.music =  pygame.mixer.Sound("game_music/softmusic.wav")
+            self.music =  pygame.mixer.Sound("game_music/softmusic2.wav")
             self.music.set_volume(0.08)
             self.music.play(-1)
 
@@ -172,7 +172,7 @@ class Game:
             self.time_since_last_collection = 0
 
         def spawn_or_collect(self):
-            if self.game_instance.power_up_gradually:
+            if self.exists and self.game_instance.power_up_gradually:
                 self.heal_gradually()
             if self.mask.overlap(self.game_instance.player.mask,(self.rect.x-self.game_instance.player.rect.x,self.rect.y-self.game_instance.player.rect.y)) and self.exists:
                 self.collected()

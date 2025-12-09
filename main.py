@@ -9,12 +9,12 @@ discrete_time = 0
 form = Form()
 path = form.path
 
-phase = 'busy music'#"control"#'busy music'#
+phase = 'power up in installments with sound effect'#"control"#'busy music'#
 #period,speed,HP,bullet_relative_speed,bullet_targeting,power_up_strenght,power_up_gradually,power_up_risky_time,
 #power_up_animated,subdued_color
 phases = {'control':[40,10,10,0.7,0.005,3,False,500,False,False,0],
 'reward in installments':[40,10,10,0.7,0.005,3,True,500,False,False,0],
-#'power up animated with sound effect':[40,10,10,0.7,0.005,2,False,500,True,False,0],
+'power up in installments with sound effect':[40,10,10,0.7,0.005,4,True,500,True,False,0],
 'subdued colors':[40,10,10,0.7,0.005,3,False,500,False,True,0],
 'busy music':[40,10,10,0.7,0.005,3,False,500,False,False,1],
 'soft music':[40,10,10,0.7,0.005,3,False,500,False,False,2]
