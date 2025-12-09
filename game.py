@@ -8,11 +8,14 @@ class Game:
         pygame.font.init()
         self.font = pygame.font.Font(None, 80)
 
+        self.music = False
+
         if power_up_animated:
             pygame.mixer.init()
             self.collection_sound = pygame.mixer.Sound("game_music/powerup.wav")
+            self.collection_sound.set_volume(0.08)
         elif music == 1:
-            self.music =  pygame.mixer.Sound("game_music/busytheme.wav")
+            self.music =  pygame.mixer.Sound("game_music/busy theme 2.wav")
             self.music.set_volume(0.08)
             self.music.play(-1)
         elif music == 2:
@@ -58,19 +61,19 @@ class Game:
     def display_HP(self):
         text = self.font.render(f'HP: {self.HP}', True,(255,255,255))
         textRect = text.get_rect()
-        textRect.center = (self.width - textRect.width//2-50, textRect.height//2 + 50)
+        textRect.center = (textRect.width// 2 + 25, textRect.height// 2 + 50)
         self.surface.blit(text,textRect)
 
     def display_time(self):
         text = self.font.render(f'Time: {self.time // 100}', True, (255, 255, 255))
         textRect = text.get_rect()
-        textRect.center = (self.width - textRect.width // 2 - 50, textRect.height // 2 + 140)
+        textRect.center = (textRect.width // 2 + 25, textRect.height // 2 + 140)
         self.surface.blit(text, textRect)
 
     def display_points(self):
         text = self.font.render(f'Points: {self.points}', True, (255, 255, 255))
         textRect = text.get_rect()
-        textRect.center = (self.width - textRect.width // 2 - 50, textRect.height // 2 + 230)
+        textRect.center = (textRect.width // 2 + 25, textRect.height // 2 + 230)
         self.surface.blit(text, textRect)
 
     def spawn_enemies(self):
@@ -79,9 +82,10 @@ class Game:
 
     def death(self):
         time_till_respawn = 10
-        self.music.stop()
-        self.music = pygame.mixer.Sound("game_music/softmusic.wav")
-        self.music.play()
+        if self.music != False:
+            self.music.stop()
+            self.music = pygame.mixer.Sound("game_music/softmusic.wav")
+            self.music.play()
         while time_till_respawn > 0:
             self.surface.fill((100,100,100))
             text = self.font.render(f'Time till respawning: {time_till_respawn}', True, (0, 0, 0))
@@ -91,7 +95,8 @@ class Game:
             pygame.display.update()
             time_till_respawn -= 1
             pygame.time.delay(990)
-        self.music.stop()
+        if self.music != False:
+            self.music.stop()
 
     def move_objects(self):
         self.player.move()
@@ -175,7 +180,7 @@ class Game:
             self.time_since_last_collection = 0
 
         def spawn_or_collect(self):
-            if self.exists and self.game_instance.power_up_gradually:
+            if (self.game_instance.time - self.time_since_last_collection) <= 100*self.game_instance.power_up_strength and self.game_instance.power_up_gradually and self.game_instance.time > 100*self.game_instance.power_up_strength:
                 self.heal_gradually()
             if self.mask.overlap(self.game_instance.player.mask,(self.rect.x-self.game_instance.player.rect.x,self.rect.y-self.game_instance.player.rect.y)) and self.exists:
                 self.collected()
