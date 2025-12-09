@@ -79,7 +79,9 @@ class Game:
 
     def death(self):
         time_till_respawn = 10
-        pygame.mixer.stop()
+        self.music.stop()
+        self.music = pygame.mixer.Sound("game_music/softmusic.wav")
+        self.music.play()
         while time_till_respawn > 0:
             self.surface.fill((100,100,100))
             text = self.font.render(f'Time till respawning: {time_till_respawn}', True, (0, 0, 0))
@@ -89,6 +91,7 @@ class Game:
             pygame.display.update()
             time_till_respawn -= 1
             pygame.time.delay(990)
+        self.music.stop()
 
     def move_objects(self):
         self.player.move()
