@@ -31,8 +31,8 @@ class Game:
         self.subdued_colors = subdued_colors
         self.player_sprite = "Resprite_exports/Player"+str(int(subdued_colors))+".gif"
         self.enemy_sprite = "Resprite_exports/Enemy"+str(int(subdued_colors))+".gif"
-        self.enemy_bullet_sprite = "Resprite_exports/EnemyBullet"+str(int(subdued_colors))+".png"
-        self.player_bullet_sprite = "Resprite_exports/PlayerBullet"+str(int(subdued_colors))+".png"
+        self.enemy_bullet_sprite = "Resprite_exports/EnemyBullet"+str(int(subdued_colors))+".gif"
+        self.player_bullet_sprite = "Resprite_exports/PlayerBullet"+str(int(subdued_colors))+".gif"
         self.power_up_sprite = "Resprite_exports/Medkit"+str(int(subdued_colors))
         self.background = pygame.image.load("Resprite_exports/Background"+str(int(subdued_colors))+".jpg").convert()
 
@@ -145,7 +145,7 @@ class Game:
     class GameObject:
         def __init__(self, game_instance, x, y,sprite_path):
             self.sprite_path = sprite_path
-            self.image = pygame.image.load(self.sprite_path).convert()
+            self.image = pygame.image.load(self.sprite_path).convert_alpha()
             self.game_instance = game_instance
             self.rect = self.image.get_rect()
             self.mask = pygame.mask.from_surface(self.image)
