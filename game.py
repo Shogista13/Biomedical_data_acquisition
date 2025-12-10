@@ -28,7 +28,8 @@ class Game:
         self.subdued_colors = subdued_colors
         self.player_sprite = "Resprite_exports/Player"+str(int(subdued_colors))+".gif"
         self.enemy_sprite = "Resprite_exports/Enemy"+str(int(subdued_colors))+".gif"
-        self.bullet_sprite = "Resprite_exports/Bullet"+str(int(subdued_colors))+".gif"
+        self.enemy_bullet_sprite = "Resprite_exports/EnemyBullet"+str(int(subdued_colors))+".png"
+        self.player_bullet_sprite = "Resprite_exports/PlayerBullet"+str(int(subdued_colors))+".png"
         self.power_up_sprite = "Resprite_exports/Medkit"+str(int(subdued_colors))
         self.background = pygame.image.load("Resprite_exports/Background"+str(int(subdued_colors))+".jpg").convert()
 
@@ -280,8 +281,8 @@ class Game:
             self.last_shot = 0
 
     class Bullet(GameObject):
-        def __init__(self, game_instance, x, y):
-            super().__init__(game_instance,x,y,game_instance.bullet_sprite)
+        def __init__(self, game_instance, x, y,bullet_sprite):
+            super().__init__(game_instance,x,y,bullet_sprite)
             self.spawn_time = game_instance.time
             self.to_delete = False
 
@@ -329,7 +330,7 @@ class Game:
 
     class PlayerBullet(Bullet):
         def __init__(self,game_instance,x,y):
-            super().__init__(game_instance,x,y)
+            super().__init__(game_instance,x,y,game_instance.player_bullet_sprite)
             mouse_position = pygame.mouse.get_pos()
             self.speed_x = mouse_position[0] - self.rect.x
             self.speed_y = mouse_position[1] - self.rect.y
@@ -339,7 +340,7 @@ class Game:
 
     class EnemyBullet(Bullet):
         def __init__(self,game_instance,x, y):
-            super().__init__(game_instance,x,y)
+            super().__init__(game_instance,x,y,game_instance.enemy_bullet_sprite)
             self.speed_x = self.game_instance.player.rect.centerx - self.rect.centerx + random.randint(-300, 300)
             self.speed_y = self.game_instance.player.rect.centery - self.rect.centery + random.randint(-300, 300)
             self.normalizer = self.game_instance.bullet_relative_speed*self.game_instance.speed / (math.sqrt(self.speed_x ** 2 + self.speed_y ** 2) + 1)
