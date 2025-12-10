@@ -23,8 +23,10 @@ phases = {'control':[40,10,10,0.7,0.005,3,False,500,False,False,0],
 game_instance = game.Game(*phases[phase])
 database = Data(path,phase)
 start_time = time.time()
+previous_time = time.time()
+previous_entry = time.time()
 
-while run and discrete_time < 18000:
+while run and time.time() - start_time < 240:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             run = False
@@ -32,11 +34,16 @@ while run and discrete_time < 18000:
     if keys[pygame.K_ESCAPE]:
         run = False
     game_instance.play()
-    if game_instance.time % 20 == 0 and game_instance.time > 500 and game_instance.HP > 0:
+    if discrete_time%20 == 0:
         database.get_data(game_instance.player,game_instance.enemies,game_instance.enemy_bullets,game_instance.player_bullets,game_instance.HP,game_instance.power_up.exists,round(time.time() - start_time, 2))
+        previous_entry = time.time()
     if game_instance.HP == 0:
+        if discrete_time % 20 != 0:
+            database.get_data(game_instance.player,game_instance.enemies,game_instance.enemy_bullets,game_instance.player_bullets,game_instance.HP,game_instance.power_up.exists,round(time.time() - start_time, 2))
         pygame.mixer.stop()
         game_instance = game.Game(*phases[phase])
     discrete_time += 1
-
+    while time.time() - start_time < discrete_time*0.01:
+        pygame.time.delay(10)
+    previous_time = time.time()
 database.save_data()
