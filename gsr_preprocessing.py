@@ -11,5 +11,5 @@ gsr_no_nan = gsr[~np.isnan(gsr)]
 filter = firwin(501, [0.05,1], pass_zero=False,fs=500)
 #filtered_gsr = sosfiltfilt(sos, gsr)
 filtered_gsr = lfilter(filter,1,gsr_no_nan)
-plt.plot([i for i in range(400,len(filtered_gsr))],filtered_gsr[400:])
+plt.plot([i for i in range(400,len(filtered_gsr))],gsr_no_nan[400:])
 plt.show()
