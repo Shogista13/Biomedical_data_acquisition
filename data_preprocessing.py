@@ -1,9 +1,6 @@
 import numpy as np
 import pandas as pd
 
-
-
-
 def process_data(dataframe,path,phase):
     eda,era = get_gsr(dataframe['Skin conductance'].tolist())
     heart_rate = get_pulse([sample for samples in dataframe['Relative blood volume'].tolist() for sample in samples])

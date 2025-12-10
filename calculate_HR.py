@@ -1,8 +1,9 @@
 import pandas as pd
-from scipy.signal import butter,filtfilt
+from scipy.signal import butter,sosfiltfilt
 import matplotlib.pyplot as plt
 import numpy as np
-<<<<<<< Updated upstream
+import os
+from biosppy.signals.ppg import ppg
 #from copy import deepcopy
 
 def normalize_the_signal(signal,sampling_rate):
@@ -47,20 +48,41 @@ def get_HR(signal,peaks,sampling_rate):
     HR = []
     for i in range(len(signal)//(sampling_rate)-5):
         heart_beats = [beat for beat in peaks if  i*sampling_rate<= beat < (i+5)*sampling_rate]
-        HR.append((len(heart_beats)-1)/(heart_beats[-1]-heart_beats[0])*500*60)
+        if len(heart_beats) > 3:
+            HR.append((len(heart_beats)-1)/(heart_beats[-1]-heart_beats[0])*sampling_rate*60)
+        else:
+            print("zle")
+            HR.append(0)
     return HR
 
-def calculate_HR_pipeline():
-    dataframe = pd.read_csv("Pomiar0.txt",header=None).to_numpy()
-    b,a = butter(4, (1,4), 'bp',output="ba", fs=500)
+def show(save_path,filtered_pulse,heart_rate,pulse_time_axis,heart_rate_time_axis):
+    k = 40
+    for i in range(k):
+        f, axes = plt.subplots(2)
+        #axes[0].plot([i for i in range(len(filtered_pulse)//k)],filtered_pulse[len(filtered_pulse)//k*i:(len(filtered_pulse)//k)*(i+1)])
+        #axes[1].plot([i for i in range(len(heart_rate)//k)],heart_rate[len(heart_rate)//k*i:(len(heart_rate)//k)*(i+1)])
+        axes[0].plot(pulse_time_axis[len(filtered_pulse)//k*i:(len(filtered_pulse)//k)*(i+1)],filtered_pulse[len(filtered_pulse)//k*i:(len(filtered_pulse)//k)*(i+1)])
+        axes[1].plot(heart_rate_time_axis[len(heart_rate)//k*i:(len(heart_rate)//k)*(i+1)],heart_rate[len(heart_rate)//k*i:(len(heart_rate)//k)*(i+1)])
+        plt.savefig(save_path+str(i)+'.jpg')
+        plt.close()
+
+
+def calculate_HR_pipeline(load_path,save_path):
+    dataframe = pd.read_csv(load_path,header=None,sep = '\t').to_numpy()
+    sos = butter(4, (4,8), 'bs',output="sos", fs=1000)
     pulse = dataframe[:,0]
     pulse_no_nan = pulse[~np.isnan(pulse)]
-    filtered_pulse = filtfilt(b,a,pulse_no_nan)
-    pulse_normalized = normalize_the_signal(filtered_pulse,500)
-    peaks = find_ppg_peaks(pulse_normalized.tolist(),500)
-    heart_rate = get_HR(pulse_normalized,peaks,500)
-    plt.plot([i for i in range(len(heart_rate))],heart_rate)
-    plt.show()
-    return heart_rate
+    filtered_pulse = sosfiltfilt(sos,pulse_no_nan)
+    #pulse_normalized = normalize_the_signal(filtered_pulse,500)
+    #peaks = find_ppg_peaks(pulse_normalized.tolist(),500)
+    #heart_rate = get_HR(pulse_normalized,peaks,500)
+    result = ppg(filtered_pulse)
+    #show(save_path,filtered_pulse,heart_rate)
 
-calculate_HR_pipeline()
+    show(save_path,result[1],result[6],result[0],result[5])
+    #return heart_rate
+
+path = "Data_project/ML08/biosignals/"
+files = os.listdir(path+"unprocessed")
+for file in files:
+    calculate_HR_pipeline(path+"unprocessed/"+file,path+"graphs/"+file.replace(".txt",""))
