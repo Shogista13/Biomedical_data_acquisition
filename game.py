@@ -85,6 +85,7 @@ class Game:
         if self.music != False:
             self.music.stop()
             self.music = pygame.mixer.Sound("game_music/softmusic.wav")
+            self.music.set_volume(0.08)
             self.music.play()
         while time_till_respawn > 0:
             self.surface.fill((100,100,100))
