@@ -324,13 +324,13 @@ class Game:
 
         def check_for_collisions(self):
             if isinstance(self, Game.PlayerBullet):
-                collisions = [enemy for enemy in self.game_instance.enemies if self.mask.overlap(enemy.mask,(self.rect.x-enemy.rect.x,self.rect.y-enemy.rect.y))]
+                collisions = [enemy for enemy in self.game_instance.enemies if self.mask.overlap(enemy.mask,(enemy.rect.x-self.rect.x,enemy.rect.y-self.rect.y))]
                 if collisions:
                     self.to_delete = True
                     self.game_instance.enemies.remove(collisions[0])
                     self.game_instance.points += 1
             elif isinstance(self, Game.EnemyBullet):
-                if self.mask.overlap(self.game_instance.player.mask,(self.rect.x-self.game_instance.player.rect.x,self.rect.y-self.game_instance.player.rect.y)):
+                if self.mask.overlap(self.game_instance.player.mask,(self.game_instance.player.rect.x-self.rect.x,self.game_instance.player.rect.y-self.rect.y)):
                     self.game_instance.HP -= 1
                     self.to_delete = True
 

@@ -2,7 +2,7 @@ import pandas as pd
 #from biosppy.signals.ppg import ppg
 #from biosppy.signals.eda import biosppy_decomposition
 from scipy.signal import butter,filtfilt
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import numpy as np
 #from copy import deepcopy
 
@@ -60,4 +60,8 @@ def calculate_HR_pipeline():
     pulse_normalized = normalize_the_signal(filtered_pulse,500)
     peaks = find_ppg_peaks(pulse_normalized.tolist(),500)
     heart_rate = get_HR(pulse_normalized,peaks,500)
+    plt.plot([i for i in range(len(heart_rate))],heart_rate)
+    plt.show()
     return heart_rate
+
+calculate_HR_pipeline()
