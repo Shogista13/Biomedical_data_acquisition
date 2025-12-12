@@ -48,21 +48,18 @@ def get_HR(signal,peaks,sampling_rate):
     HR = []
     for i in range(len(signal)//(sampling_rate)-5):
         heart_beats = [beat for beat in peaks if  i*sampling_rate<= beat < (i+5)*sampling_rate]
-        if len(heart_beats) > 3:
-            HR.append((len(heart_beats)-1)/(heart_beats[-1]-heart_beats[0])*sampling_rate*60)
-        else:
-            print("zle")
-            HR.append(0)
+        HR.append((len(heart_beats)-1)/(heart_beats[-1]-heart_beats[0])*sampling_rate*60)
     return HR
 
-def show(save_path,filtered_pulse,heart_rate,pulse_time_axis,heart_rate_time_axis):
+def show(save_path,filtered_pulse,heart_rate,pulse_time_axis,heart_rate_time_axis,raw_pulse):
     k = 40
     for i in range(k):
-        f, axes = plt.subplots(2)
+        f, axes = plt.subplots(3)
         #axes[0].plot([i for i in range(len(filtered_pulse)//k)],filtered_pulse[len(filtered_pulse)//k*i:(len(filtered_pulse)//k)*(i+1)])
         #axes[1].plot([i for i in range(len(heart_rate)//k)],heart_rate[len(heart_rate)//k*i:(len(heart_rate)//k)*(i+1)])
-        axes[0].plot(pulse_time_axis[len(filtered_pulse)//k*i:(len(filtered_pulse)//k)*(i+1)],filtered_pulse[len(filtered_pulse)//k*i:(len(filtered_pulse)//k)*(i+1)])
-        axes[1].plot(heart_rate_time_axis[len(heart_rate)//k*i:(len(heart_rate)//k)*(i+1)],heart_rate[len(heart_rate)//k*i:(len(heart_rate)//k)*(i+1)])
+        axes[0].plot(pulse_time_axis[len(raw_pulse)//k*i:(len(raw_pulse)//k)*(i+1)],raw_pulse[len(raw_pulse)//k*i:(len(raw_pulse)//k)*(i+1)])
+        axes[1].plot(pulse_time_axis[len(filtered_pulse)//k*i:(len(filtered_pulse)//k)*(i+1)],filtered_pulse[len(filtered_pulse)//k*i:(len(filtered_pulse)//k)*(i+1)])
+        axes[2].plot(heart_rate_time_axis[len(heart_rate)//k*i:(len(heart_rate)//k)*(i+1)],heart_rate[len(heart_rate)//k*i:(len(heart_rate)//k)*(i+1)])
         plt.savefig(save_path+str(i)+'.jpg')
         plt.close()
 
@@ -79,7 +76,7 @@ def calculate_HR_pipeline(load_path,save_path):
     result = ppg(filtered_pulse)
     #show(save_path,filtered_pulse,heart_rate)
 
-    show(save_path,result[1],result[6],result[0],result[5])
+    show(save_path,result[1],result[6],result[0],result[5],pulse_no_nan)
     #return heart_rate
 
 path = "Data_project/ML08/biosignals/"

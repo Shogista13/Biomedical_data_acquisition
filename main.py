@@ -9,7 +9,7 @@ discrete_time = 0
 form = Form()
 path = form.path
 
-phase = 'busy music'#"control"#'busy music'#
+phase = "soft music"#'busy music'#
 #period,speed,HP,bullet_relative_speed,bullet_targeting,power_up_strenght,power_up_gradually,power_up_risky_time,
 #power_up_animated,subdued_color,music
 phases = {'control':[40,10,10,0.7,0.005,3,False,500,False,False,0],
