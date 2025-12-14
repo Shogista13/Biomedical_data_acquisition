@@ -21,7 +21,7 @@ class Data:
         player_bullet_speed_x = [bullet.direction[0] for bullet in player_bullets]
         player_bullet_speed_y = [bullet.direction[1] for bullet in player_bullets]
         enemy_x = [enemy.rect.x for enemy in enemies]
-        enemy_y = [enemy.rect.x for enemy in enemies]
+        enemy_y = [enemy.rect.y for enemy in enemies]
         enemy_speed_x = [enemy.speed_x for enemy in enemies]
         enemy_speed_y = [enemy.speed_y for enemy in enemies]
         enemy_bullet_x = [bullet.rect.x for bullet in enemy_bullets]
