@@ -33,12 +33,13 @@ class Database:
         dirs = os.listdir(path)
         self.biosignal_files = [["Data_project/" + dir + "/biosignals/" + file for file in os.listdir("Data_project/" + dir + "/biosignals")] for dir in dirs]
         self.game_files = [["Data_project/" + dir + "/unprocessed/" + file for file in os.listdir("Data_project/" + dir + "/unprocessed")] for dir in dirs]
-        self.patients = [Database.Patient(biosignal_file,game_file) for biosignal_file,game_file in list(zip(self.biosignal_files,self.game_files))]
+        self.patients = [Database.Patient(self.biosignal_files[i],self.game_files[i],i) for i in range(len(self.biosignal_files))]
 
     class Patient:
-        def __init__(self,biosignal_files,game_files):
+        def __init__(self,biosignal_files,game_files,patient_nr):
+            self.patient_nr = patient_nr
             self.biosignals = Database.Patient.BiosignalPipeline(biosignal_files)
-            self.game_data = Database.Patient.GameParametersPipeline(game_files)
+            self.game_data = Database.Patient.GameParametersPipeline(game_files,patient_nr)
 
         class BiosignalPipeline:
             def __init__(self,biosignal_files):
@@ -149,12 +150,15 @@ class Database:
                     return eda_power_spectral_density_normalized
 
         class GameParametersPipeline:
-            def __init__(self,game_files):
+            def __init__(self,game_files,patient_nr):
+                self.patient_nr = patient_nr
                 self.game_files = game_files
                 self.game_data = self.get_game_data()
                 self.player_pos = self.game_data[0]
                 self.enemy_bullet_pos = self.game_data[2]
-                self.get_distances_from_bullets()
+                self.time = self.game_data[3]
+                self.bullet_nr,self.bullet_close = self.get_distances_from_bullets()
+                self.save_custom_features()
 
             def get_game_data(self):
                 player_x = []
@@ -163,6 +167,7 @@ class Database:
                 enemy_y = []
                 enemy_bullet_x = []
                 enemy_bullet_y = []
+                time_axes = []
                 for file in self.game_files:
                     dataframe = pd.read_csv(file)
                     player_x.append(dataframe["Player x"].tolist())
@@ -171,21 +176,40 @@ class Database:
                     enemy_y.append([read_list(i) for i in dataframe["Enemy y"].tolist()])
                     enemy_bullet_x.append([read_list(i) for i in dataframe["Enemy bullet x"].tolist()])
                     enemy_bullet_y.append([read_list(i) for i in dataframe["Enemy bullet y"].tolist()])
+                    time_axes.append(dataframe["Time"].tolist())
                 player_position = [list(zip(player_x[i],y)) for i,y in enumerate(player_y)]
-                enemy_position = [list(zip(enemy,enemy_y[i][j])) for i,frame in enumerate(enemy_x) for j,enemy in enumerate(frame)]
-                enemy_bullet_position = [list(zip(enemy_bullet,enemy_bullet_y[i][j])) for i,frame in enumerate(enemy_bullet_x) for j,enemy_bullet in enumerate(frame)]
-                return player_position,enemy_position,enemy_bullet_position
+                enemy_position = [[list(zip(enemy,enemy_y[i][j])) for j,enemy in enumerate(frame)] for i,frame in enumerate(enemy_x) ]
+                enemy_bullet_position = [[list(zip(enemy_bullet,enemy_bullet_y[i][j])) for j,enemy_bullet in enumerate(frame)] for i,frame in enumerate(enemy_bullet_x)]
+                return player_position,enemy_position,enemy_bullet_position,time_axes
 
             def get_distances_from_bullets(self):
-                print(np.array(self.player_pos).shape)
-                print(np.array(self.enemy_bullet_pos).shape)
+                feature_0_list = [[] for _ in range(6)]
+                feature_1_list = [[] for _ in range(6)]
                 for i,phase in enumerate(self.player_pos):
                     for j,player_pos_in_frame in enumerate(phase):
                         distances = []
                         for enemy_bullet in self.enemy_bullet_pos[i][j]:
                             distances.append(calculate_distance(player_pos_in_frame,enemy_bullet))
-                            print(distances)
+                        feature_0 = len(distances)
+                        feature_1 = 1/statistics.harmonic_mean(distances) if len(distances) else 0 #len equals 0 makes the expression false
+                        feature_0_list[i].append(feature_0)
+                        feature_1_list[i].append(feature_1)
+                return feature_0_list,feature_1_list
 
+            def save_custom_features(self):
+                nazwy = ["busy music", "control", "power up in installments with sound effect",
+                         "reward in installments", "soft music", "subdued colors"]
+                for i,feature_0 in enumerate(self.bullet_nr):
+                    if feature_0:
+                        f, axes = plt.subplots(2,figsize=(20, 20))
+                        axes[0].plot(self.time[i], feature_0)
+                        axes[0].set_title("Number of bullets")
+                        axes[1].plot(self.time[i], self.bullet_close[i])
+                        axes[1].set_title("1/harmonic mean of distances to bullets")
+                        plt.suptitle("Patient " + str(self.patient_nr), fontsize=20)
+                        plt.subplots_adjust(hspace=0.5, top=0.85, bottom=0.05)
+                        plt.savefig("Graphs/Custom_features/Patient" + str(self.patient_nr) + "Phase" + nazwy[i].replace(" ","_"))
+                        plt.close()
 baza = Database()
 
 
