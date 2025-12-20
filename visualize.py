@@ -1,11 +1,12 @@
 import matplotlib.pyplot as plt
 import pandas as pd
-from scipy.signal import firwin,filtfilt,decimate
+from scipy.signal import firwin,filtfilt,decimate,spectrogram
 from scipy import integrate
 import numpy as np
 from biosppy.signals.ppg import ppg
 import os
 import math
+import time
 import statistics
 
 def show(pulses,patient,k,sampling_rate,path):
@@ -34,6 +35,8 @@ class Database:
         self.biosignal_files = [["Data_project/" + dir + "/biosignals/" + file for file in os.listdir("Data_project/" + dir + "/biosignals")] for dir in dirs]
         self.game_files = [["Data_project/" + dir + "/unprocessed/" + file for file in os.listdir("Data_project/" + dir + "/unprocessed")] for dir in dirs]
         self.patients = [Database.Patient(self.biosignal_files[i],self.game_files[i],i) for i in range(len(self.biosignal_files))]
+        self.data = self.load_data()
+        print(self.data)
 
     class Patient:
         def __init__(self,biosignal_files,game_files,patient_nr):
@@ -45,9 +48,9 @@ class Database:
             def __init__(self,biosignal_files):
                 self.biosignal_files = biosignal_files
                 self.pulses, self.edas = self.get_biosignals()
-                #self.pulse_pipeline = Database.Patient.BiosignalPipeline.PulsePipeline(self.pulses)
-                #self.HR_pipeline = Database.Patient.BiosignalPipeline.HRPipeline(self.pulses)
-                #self.eda_pipeline = Database.Patient.BiosignalPipeline.EDAPipeline(self.edas)
+                self.pulse_pipeline = Database.Patient.BiosignalPipeline.PulsePipeline(self.pulses)
+                self.HR_pipeline = Database.Patient.BiosignalPipeline.HRPipeline(self.pulses)
+                self.eda_pipeline = Database.Patient.BiosignalPipeline.EDAPipeline(self.edas)
 
             def get_biosignals(self):
                 pulses = []
@@ -158,7 +161,7 @@ class Database:
                 self.enemy_bullet_pos = self.game_data[2]
                 self.time = self.game_data[3]
                 self.bullet_nr,self.bullet_close = self.get_distances_from_bullets()
-                self.save_custom_features()
+                #self.save_custom_features()
 
             def get_game_data(self):
                 player_x = []
@@ -210,6 +213,20 @@ class Database:
                         plt.subplots_adjust(hspace=0.5, top=0.85, bottom=0.05)
                         plt.savefig("Graphs/Custom_features/Patient" + str(self.patient_nr) + "Phase" + nazwy[i].replace(" ","_"))
                         plt.close()
+
+    def load_data(self):
+        data = {
+        "HR": [patient.biosignals.HR_pipeline.HRs for patient in self.patients],
+        "EDA_PSD": [patient.biosignals.eda_pipeline.eda_power_spectral_density_normalized for patient in self.patients],
+        "time": [patient.game_data.time for patient in self.patients],
+        "bullet_nr": [patient.game_data.bullet_nr for patient in self.patients],
+        "bullet_close": [patient.game_data.bullet_close for patient in self.patients]
+        }
+        return data
+
+    def correlate_biosignals_with_custom_features(self):
+        pass
+
 baza = Database()
 
 
