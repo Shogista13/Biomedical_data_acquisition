@@ -1,16 +1,14 @@
-import sys
-import colorama
+from copy import deepcopy
 import matplotlib.pyplot as plt
 import pandas as pd
 from scipy.signal import firwin,filtfilt,decimate,spectrogram,correlate,correlation_lags
 from scipy.stats import spearmanr,combine_pvalues
+import scipy.special
 import numpy as np
 from biosppy.signals.ppg import ppg
 import os
 import math
-import time
 import statistics
-import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from colorama import Fore, Back, Style
@@ -46,7 +44,11 @@ class Database:
         self.game_files = [["Data_project/" + dir + "/unprocessed/" + file for file in os.listdir("Data_project/" + dir + "/unprocessed")] for dir in dirs]
         self.patients = [Database.Patient(self.biosignal_files[i],self.game_files[i],patient_ID(self.biosignal_files[i])) for i in range(len(self.biosignal_files))]
         self.data = self.load_data()
-        self.finally_some_fun_please_give_me_0_05()
+        self.bullet_nr_HR, self.bullet_close_HR, self.HP_HR = self.correlate()
+        self.metaanalyses_of_correlations()
+        self.data_for_tests = self.feature_extraction()
+        self.verify_normality()
+        self.test()
 
     class Patient:
         def __init__(self,biosignal_files,game_files,patient_name):
@@ -126,7 +128,6 @@ class Database:
                     h = firwin(51, [4, 8], pass_zero=True, fs=250)
                     for pulse in self.pulses:
                         results = ppg(filtfilt(h,1.0,pulse), sampling_rate=250, show=False)
-                        time_axis_s = [i / 250 for i in range(0, len(pulse), 250)]
                         heart_rate_time_axis = results[5]
                         heart_rate_values = results[6]
                         HRs.append(heart_rate_values)
@@ -174,24 +175,27 @@ class Database:
                                        }
                     for freq_bin in self.decomposed_edas.keys():
                         for phase in self.decomposed_edas[freq_bin]:
-                            phase_psd = []
-                            for window in range(15):
-                                sample = np.array(phase[window*len(phase)//16:(window+2)*len(phase)//16])
-                                sample_squared = np.square(sample)
-                                sample_energy = np.sum(sample_squared)
-                                phase_psd.append(sample_energy)
-                            eda_psd[freq_bin].append(phase_psd)
+                            sample_squared = np.square(phase)
+                            sample_energy = np.sum(sample_squared)
+                            eda_psd[freq_bin].append(sample_energy)
+                            #phase_psd = []
+                            #for window in range(15):
+                            #    sample = np.array(phase[window*len(phase)//16:(window+2)*len(phase)//16])
+                            #    sample_squared = np.square(sample)
+                            #    sample_energy = np.sum(sample_squared)
+                            #    phase_psd.append(sample_energy)
+                            #eda_psd[freq_bin].append(phase_psd)
                     return eda_psd
 
                 def normalize_eda_psd(self):
                     eda_power_spectral_density_normalized = dict(self.eda_power_spectral_density) #creates a deepcopy
-                    for window in range(15):
-                        for phase in range(len(self.eda_power_spectral_density["VLF"])):
-                            sum = 0
-                            for freq_bin in self.eda_power_spectral_density.keys():
-                                sum += self.eda_power_spectral_density[freq_bin][phase][window]
-                            for freq_bin in self.eda_power_spectral_density.keys():
-                                eda_power_spectral_density_normalized[freq_bin][phase][window] /= sum
+                    #for window in range(15):
+                    for phase in range(len(self.eda_power_spectral_density["VLF"])):
+                        sum = 0
+                        for freq_bin in self.eda_power_spectral_density.keys():
+                            sum += self.eda_power_spectral_density[freq_bin][phase]#[window]
+                        for freq_bin in self.eda_power_spectral_density.keys():
+                            eda_power_spectral_density_normalized[freq_bin][phase]/= sum#[window]
                     return eda_power_spectral_density_normalized
 
         class GameParametersPipeline:
@@ -245,6 +249,7 @@ class Database:
 
     def load_data(self):
         data = {
+        "Patient ID": [patient.patient_name for patient in self.patients],
         "HR time axes": [patient.biosignals.HR_pipeline.HR_time_axes for patient in self.patients],
         "HR": [patient.biosignals.HR_pipeline.HRs for patient in self.patients],
         "EDA_PSD": [patient.biosignals.eda_pipeline.eda_power_spectral_density_normalized for patient in self.patients],
@@ -255,35 +260,112 @@ class Database:
         }
         return data
 
-    def finally_some_fun_please_give_me_0_05(self):
-        bullet_nr_HR = Database.Correlation2TypesOfSignals(self.data["bullet_nr"],self.data["HR"],self.data["game time"],self.data["HR time axes"],0,'greater')
-        bullet_close_HR = Database.Correlation2TypesOfSignals(self.data["bullet_close"],self.data["HR"],self.data["game time"],self.data["HR time axes"],0,'greater')
-        HP_HR = Database.Correlation2TypesOfSignals(self.data["HP"],self.data["HR"],self.data["game time"],self.data["HR time axes"],0,"less")
+    def correlate(self):
+        bullet_nr_HR = Database.Correlation2TypesOfSignals(self.data["bullet_nr"], self.data["HR"],
+                                                           self.data["game time"], self.data["HR time axes"], 0,
+                                                           'greater')
+        bullet_close_HR = Database.Correlation2TypesOfSignals(self.data["bullet_close"], self.data["HR"],
+                                                              self.data["game time"], self.data["HR time axes"], 0,
+                                                              'greater')
+        HP_HR = Database.Correlation2TypesOfSignals(self.data["HP"], self.data["HR"], self.data["game time"],
+                                                    self.data["HR time axes"], 0, "less")
+        return bullet_nr_HR,bullet_close_HR,HP_HR
 
-        print(combine_pvalues(bullet_nr_HR.pvals,method = 'stouffer').pvalue)
-        print(combine_pvalues(bullet_close_HR.pvals,method = 'stouffer').pvalue)
-        print(combine_pvalues(HP_HR.pvals,method = 'stouffer').pvalue)
+    def metaanalyses_of_correlations(self):
+        average_r_bullet_nr_HR = np.tanh(np.mean(np.arctanh(self.bullet_nr_HR.stats)))
+        average_r_bullet_close_HR = np.tanh(np.mean(np.arctanh(self.bullet_close_HR.stats)))
+        average_r_HP_HR = np.tanh(np.mean(np.arctanh(self.HP_HR.stats)))
 
+        print("Correlation result (bullet nr and HR): "+ str(average_r_bullet_nr_HR))
+        print("Correlation result (inverse of bullet distance and HR): "+ str(average_r_bullet_close_HR))
+        print("Correlation result (HP and HR): "+ str(average_r_HP_HR),end = '\n\n')
 
-        '''colorama.init()
+    def feature_extraction(self):
+        features_dict_standard = {"HR_mean":[],
+                                "HR_std":[],
+                                "HR_skewness":[],
+                                "HR_kurtosis":[],
+                                "EDA_VLF":[],
+                                "EDA_LF":[],
+                                "EDA_HF1": [],
+                                "EDA_HF2": [],
+                                "EDA_VHF":[]
+                                }
 
-        for i in bullet_close_HR.pvals:
-            if float(i) > 0.05:
-                print(Style.RESET_ALL + str(float(i)),end=', ')
-            else:
-                print(Fore.RED + str(float(i)),', ')
+        phases = {'busy music':deepcopy(features_dict_standard),
+                  'control':deepcopy(features_dict_standard),
+                  'soft music':deepcopy(features_dict_standard),
+                  'subdued colors':deepcopy(features_dict_standard)
+        }
 
-        for i in bullet_nr_HR.pvals:
-            if float(i) > 0.05:
-                print(Style.RESET_ALL + str(float(i)),end=', ')
-            else:
-                print(Fore.RED + str(float(i)),', ')
+        for i,phase in [(0,"busy music"),(1,"control"),(4,"soft music"),(5,"subdued colors")]:
+            for patient in range(len(self.data["Patient ID"])):
+                phases[phase]['HR_mean'].append(np.mean(self.data["HR"][patient][i]))
+                phases[phase]['HR_std'].append(np.std(self.data["HR"][patient][i]))
+                phases[phase]['HR_skewness'].append(scipy.stats.skew(self.data["HR"][patient][i]))
+                phases[phase]['HR_kurtosis'].append(scipy.stats.kurtosis(self.data["HR"][patient][i]))
+                phases[phase]["EDA_VLF"].append(self.data["EDA_PSD"][patient]["VLF"][i])
+                phases[phase]["EDA_LF"].append(self.data["EDA_PSD"][patient]["LF"][i])
+                phases[phase]["EDA_HF1"].append(self.data["EDA_PSD"][patient]["HF1"][i])
+                phases[phase]["EDA_HF2"].append(self.data["EDA_PSD"][patient]["HF2"][i])
+                phases[phase]["EDA_VHF"].append(self.data["EDA_PSD"][patient]["VHF"][i])
+        return phases
 
-        for i in HP_HR.pvals:
-            if float(i) > 0.05:
-                print(Style.RESET_ALL + str(float(i)),end=', ')
-            else:
-                print(Fore.RED + str(float(i)),', ')'''
+    def verify_normality(self):
+        if True: #disabled for now
+            for phase,phase_values in self.data_for_tests.items():
+                for stat,stat_values in phase_values.items():
+                    result = scipy.stats.shapiro(stat_values).pvalue
+                    print(phase+' -> '+ stat + ' -> ' + str(result),end=' -> ')
+                    if result > 0.05:
+                        print("NORMAL")
+                    else:
+                        print("NOPE")
+
+    def test(self):
+        print('Busy music')
+        print("HR mean: " + str(scipy.stats.ttest_rel(self.data_for_tests['control']['HR_mean'],self.data_for_tests['busy music']['HR_mean']).pvalue))
+        print("HR std: " + str(scipy.stats.wilcoxon(self.data_for_tests['control']['HR_std'],self.data_for_tests['busy music']['HR_std']).pvalue))
+        print("HR skewness: " + str(scipy.stats.ttest_rel(self.data_for_tests['control']['HR_skewness'],self.data_for_tests['busy music']['HR_skewness']).pvalue))
+        print("HR kurtosis: " + str(scipy.stats.ttest_rel(self.data_for_tests['control']['HR_kurtosis'],self.data_for_tests['busy music']['HR_kurtosis']).pvalue))
+        print("EDA VLF: " + str(scipy.stats.ttest_rel(self.data_for_tests['control']['EDA_VLF'],self.data_for_tests['busy music']['EDA_VLF']).pvalue))
+        print("EDA LF: " + str(scipy.stats.ttest_rel(self.data_for_tests['control']['EDA_LF'],self.data_for_tests['busy music']['EDA_LF']).pvalue))
+        print("EDA HF1: " + str(scipy.stats.wilcoxon(self.data_for_tests['control']['EDA_HF1'],self.data_for_tests['busy music']['EDA_HF1']).pvalue))
+        print("EDA HF2: " + str(scipy.stats.wilcoxon(self.data_for_tests['control']['EDA_HF2'],self.data_for_tests['busy music']['EDA_HF2']).pvalue))
+        print("EDA VHF: " + str(scipy.stats.wilcoxon(self.data_for_tests['control']['EDA_VHF'],self.data_for_tests['busy music']['EDA_VHF']).pvalue))
+
+        print('Soft music')
+        print("HR mean: " + str(scipy.stats.ttest_rel(self.data_for_tests['control']['HR_mean'],self.data_for_tests['soft music']['HR_mean']).pvalue))
+        print("HR std: " + str(scipy.stats.wilcoxon(self.data_for_tests['control']['HR_std'],self.data_for_tests['soft music']['HR_std']).pvalue))
+        print("HR skewness: " + str(scipy.stats.ttest_rel(self.data_for_tests['control']['HR_skewness'],self.data_for_tests['soft music']['HR_skewness']).pvalue))
+        print("HR kurtosis: " + str(scipy.stats.ttest_rel(self.data_for_tests['control']['HR_kurtosis'],self.data_for_tests['soft music']['HR_kurtosis']).pvalue))
+        print("EDA VLF: " + str(scipy.stats.ttest_rel(self.data_for_tests['control']['EDA_VLF'],self.data_for_tests['soft music']['EDA_VLF']).pvalue))
+        print("EDA LF: " + str(scipy.stats.ttest_rel(self.data_for_tests['control']['EDA_LF'],self.data_for_tests['soft music']['EDA_LF']).pvalue))
+        print("EDA HF1: " + str(scipy.stats.wilcoxon(self.data_for_tests['control']['EDA_HF1'],self.data_for_tests['soft music']['EDA_HF1']).pvalue))
+        print("EDA HF2: " + str(scipy.stats.wilcoxon(self.data_for_tests['control']['EDA_HF2'],self.data_for_tests['soft music']['EDA_HF2']).pvalue))
+        print("EDA VHF: " + str(scipy.stats.wilcoxon(self.data_for_tests['control']['EDA_VHF'],self.data_for_tests['soft music']['EDA_VHF']).pvalue))
+
+        print('Subdued colors')
+        print("HR mean: " + str(scipy.stats.ttest_rel(self.data_for_tests['control']['HR_mean'],self.data_for_tests['subdued colors']['HR_mean']).pvalue))
+        print("HR std: " + str(scipy.stats.wilcoxon(self.data_for_tests['control']['HR_std'],self.data_for_tests['subdued colors']['HR_std']).pvalue))
+        print("HR skewness: " + str(scipy.stats.ttest_rel(self.data_for_tests['control']['HR_skewness'],self.data_for_tests['subdued colors']['HR_skewness']).pvalue))
+        print("HR kurtosis: " + str(scipy.stats.wilcoxon(self.data_for_tests['control']['HR_kurtosis'],self.data_for_tests['subdued colors']['HR_kurtosis']).pvalue))
+        print("EDA VLF: " + str(scipy.stats.ttest_rel(self.data_for_tests['control']['EDA_VLF'],self.data_for_tests['subdued colors']['EDA_VLF']).pvalue))
+        print("EDA LF: " + str(scipy.stats.ttest_rel(self.data_for_tests['control']['EDA_LF'],self.data_for_tests['subdued colors']['EDA_LF']).pvalue))
+        print("EDA HF1: " + str(scipy.stats.wilcoxon(self.data_for_tests['control']['EDA_HF1'],self.data_for_tests['subdued colors']['EDA_HF1']).pvalue))
+        print("EDA HF2: " + str(scipy.stats.wilcoxon(self.data_for_tests['control']['EDA_HF2'],self.data_for_tests['subdued colors']['EDA_HF2']).pvalue))
+        print("EDA VHF: " + str(scipy.stats.wilcoxon(self.data_for_tests['control']['EDA_VHF'], self.data_for_tests['subdued colors']['EDA_VHF']).pvalue))
+
+        print("Busy music vs soft music")
+        print("HR mean: " + str(scipy.stats.ttest_rel(self.data_for_tests['soft music']['HR_mean'],self.data_for_tests['busy music']['HR_mean']).pvalue))
+        print("HR std: " + str(scipy.stats.ttest_rel(self.data_for_tests['soft music']['HR_std'],self.data_for_tests['busy music']['HR_std']).pvalue))
+        print("HR skewness: " + str(scipy.stats.ttest_rel(self.data_for_tests['soft music']['HR_skewness'],self.data_for_tests['busy music']['HR_skewness']).pvalue))
+        print("HR kurtosis: " + str(scipy.stats.ttest_rel(self.data_for_tests['soft music']['HR_kurtosis'],self.data_for_tests['busy music']['HR_kurtosis']).pvalue))
+        print("EDA VLF: " + str(scipy.stats.ttest_rel(self.data_for_tests['soft music']['EDA_VLF'],self.data_for_tests['busy music']['EDA_VLF']).pvalue))
+        print("EDA LF: " + str(scipy.stats.ttest_rel(self.data_for_tests['soft music']['EDA_LF'],self.data_for_tests['busy music']['EDA_LF']).pvalue))
+        print("EDA HF1: " + str(scipy.stats.wilcoxon(self.data_for_tests['soft music']['EDA_HF1'],self.data_for_tests['busy music']['EDA_HF1']).pvalue))
+        print("EDA HF2: " + str(scipy.stats.ttest_rel(self.data_for_tests['soft music']['EDA_HF2'],self.data_for_tests['busy music']['EDA_HF2']).pvalue))
+        print("EDA VHF: " + str(scipy.stats.wilcoxon(self.data_for_tests['soft music']['EDA_VHF'],self.data_for_tests['busy music']['EDA_VHF']).pvalue))
 
     class Correlation2TypesOfSignals:
         def __init__(self,signals0,signals1,signal_0_time_axes,signal_1_time_axes,which_time_axis_stays,alternative):
@@ -382,3 +464,23 @@ baza = Database()
             if pulse: show(pulse_array,nr,40,250,"Pulse")
             if eda: show(eda_array, nr, 8, 5, "EDA")
             if heart_rate: show(heart_rate_array,nr,8,1,"Heart rate")'''
+
+'''colorama.init()
+
+for i in bullet_close_HR.pvals:
+    if float(i) > 0.05:
+        print(Style.RESET_ALL + str(float(i)),end=', ')
+    else:
+        print(Fore.RED + str(float(i)),', ')
+
+for i in bullet_nr_HR.pvals:
+    if float(i) > 0.05:
+        print(Style.RESET_ALL + str(float(i)),end=', ')
+    else:
+        print(Fore.RED + str(float(i)),', ')
+
+for i in HP_HR.pvals:
+    if float(i) > 0.05:
+        print(Style.RESET_ALL + str(float(i)),end=', ')
+    else:
+        print(Fore.RED + str(float(i)),', ')'''
