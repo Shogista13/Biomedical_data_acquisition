@@ -54,6 +54,9 @@ def comparison_test(stat0,stat1,stat_name,test_name):
         print("Size effect(r): " + str(scipy.stats.wilcoxon(np.array(stat0)-np.array(stat1),method='asymptotic').zstatistic/math.sqrt(len(stat0))))
     print("")
     plt.figure()
+    print(test_name + " " + stat_name)
+    print(stat0)
+    print(stat1)
     seaborn.kdeplot(stat0)
     seaborn.kdeplot(stat1)
     plt.title(test_name + " " + stat_name)
@@ -432,127 +435,3 @@ class Database:
                 return spearmanr(self.signal0_interpolated[self.lag:],self.signal1_interpolated[:-self.lag],nan_policy='raise',alternative = self.alternative)
 
 baza = Database()
-
-
-
-
-#def get_HR(signal,peaks,sampling_rate):
-#    HR = []
-#    for i in range(len(signal)//(sampling_rate)-5):
-#        heart_beats = [beat for beat in peaks if  i*sampling_rate<= beat < (i+5)*sampling_rate]
-#        HR.append((len(heart_beats)-1)/(heart_beats[-1]-heart_beats[0])*sampling_rate*60)
-#    return HR
-# self.save_custom_features()
-
-'''def save_custom_features(self):
-    nazwy = ["busy music", "control", "power up in installments with sound effect",
-             "reward in installments", "soft music", "subdued colors"]
-    for i,feature_0 in enumerate(self.bullet_nr):
-        if feature_0:
-            f, axes = plt.subplots(2,figsize=(20, 20))
-            axes[0].plot(self.time[i], feature_0)
-            axes[0].set_title("Number of bullets")
-            axes[1].plot(self.time[i], self.bullet_close[i])
-            axes[1].set_title("1/harmonic mean of distances to bullets")
-            plt.suptitle("Patient " + str(self.patient_nr), fontsize=20)
-            plt.subplots_adjust(hspace=0.5, top=0.85, bottom=0.05)
-            plt.savefig("Graphs/Custom_features/Patient" + str(self.patient_nr) + "Phase" + nazwy[i].replace(" ","_"))
-            plt.close()'''
-
-
-'''def processing_pipeline(load_paths,pulse = False,eda=False,heart_rate = False,just_graph=False):
-    for nr, path in enumerate(load_paths):
-        if pulse: pulse_array = []
-        if eda: eda_array = []
-        if heart_rate: heart_rate_array = []
-        for file in path:
-            if just_graph:
-            if pulse:
-                filtered_pulse = process_pulse(dataframe)
-                pulse_array.append(filtered_pulse)
-            if eda:
-                filtered_eda = process_eda(dataframe)
-                eda_array.append(filtered_eda)
-            if heart_rate:
-                filtered_heart_rate = process_heart_rate(dataframe)
-                heart_rate_array.append(filtered_heart_rate)
-        if just_graph:
-            if pulse: show(pulse_array,nr,40,250,"Pulse")
-            if eda: show(eda_array, nr, 8, 5, "EDA")
-            if heart_rate: show(heart_rate_array,nr,8,1,"Heart rate")'''
-
-'''colorama.init()
-
-for i in bullet_close_HR.pvals:
-    if float(i) > 0.05:
-        print(Style.RESET_ALL + str(float(i)),end=', ')
-    else:
-        print(Fore.RED + str(float(i)),', ')
-
-for i in bullet_nr_HR.pvals:
-    if float(i) > 0.05:
-        print(Style.RESET_ALL + str(float(i)),end=', ')
-    else:
-        print(Fore.RED + str(float(i)),', ')
-
-for i in HP_HR.pvals:
-    if float(i) > 0.05:
-        print(Style.RESET_ALL + str(float(i)),end=', ')
-    else:
-        print(Fore.RED + str(float(i)),', ')
-        
-        
-print('Busy music')
-        print("HR mean: " + str(scipy.stats.ttest_rel(self.data_for_tests['control']['HR_mean'],self.data_for_tests['busy music']['HR_mean']).pvalue))
-        print("HR std: " + str(scipy.stats.wilcoxon(self.data_for_tests['control']['HR_std'],self.data_for_tests['busy music']['HR_std']).pvalue))
-        print("HR skewness: " + str(scipy.stats.ttest_rel(self.data_for_tests['control']['HR_skewness'],self.data_for_tests['busy music']['HR_skewness']).pvalue))
-        print("HR kurtosis: " + str(scipy.stats.ttest_rel(self.data_for_tests['control']['HR_kurtosis'],self.data_for_tests['busy music']['HR_kurtosis']).pvalue))
-        print("EDA VLF: " + str(scipy.stats.ttest_rel(self.data_for_tests['control']['EDA_VLF'],self.data_for_tests['busy music']['EDA_VLF']).pvalue))
-        print("EDA LF: " + str(scipy.stats.ttest_rel(self.data_for_tests['control']['EDA_LF'],self.data_for_tests['busy music']['EDA_LF']).pvalue))
-        print("EDA HF1: " + str(scipy.stats.wilcoxon(self.data_for_tests['control']['EDA_HF1'],self.data_for_tests['busy music']['EDA_HF1']).pvalue))
-        print("EDA HF2: " + str(scipy.stats.wilcoxon(self.data_for_tests['control']['EDA_HF2'],self.data_for_tests['busy music']['EDA_HF2']).pvalue))
-        print("EDA VHF: " + str(scipy.stats.wilcoxon(self.data_for_tests['control']['EDA_VHF'],self.data_for_tests['busy music']['EDA_VHF']).pvalue))
-
-        print('Soft music')
-        print("HR mean: " + str(scipy.stats.ttest_rel(self.data_for_tests['control']['HR_mean'],self.data_for_tests['soft music']['HR_mean']).pvalue))
-        print("HR std: " + str(scipy.stats.wilcoxon(self.data_for_tests['control']['HR_std'],self.data_for_tests['soft music']['HR_std']).pvalue))
-        print("HR skewness: " + str(scipy.stats.ttest_rel(self.data_for_tests['control']['HR_skewness'],self.data_for_tests['soft music']['HR_skewness']).pvalue))
-        print("HR kurtosis: " + str(scipy.stats.ttest_rel(self.data_for_tests['control']['HR_kurtosis'],self.data_for_tests['soft music']['HR_kurtosis']).pvalue))
-        print("EDA VLF: " + str(scipy.stats.ttest_rel(self.data_for_tests['control']['EDA_VLF'],self.data_for_tests['soft music']['EDA_VLF']).pvalue))
-        print("EDA LF: " + str(scipy.stats.ttest_rel(self.data_for_tests['control']['EDA_LF'],self.data_for_tests['soft music']['EDA_LF']).pvalue))
-        print("EDA HF1: " + str(scipy.stats.wilcoxon(self.data_for_tests['control']['EDA_HF1'],self.data_for_tests['soft music']['EDA_HF1']).pvalue))
-        print("EDA HF2: " + str(scipy.stats.wilcoxon(self.data_for_tests['control']['EDA_HF2'],self.data_for_tests['soft music']['EDA_HF2']).pvalue))
-        print("EDA VHF: " + str(scipy.stats.wilcoxon(self.data_for_tests['control']['EDA_VHF'],self.data_for_tests['soft music']['EDA_VHF']).pvalue))
-
-        print('Subdued colors')
-        print("HR mean: " + str(scipy.stats.ttest_rel(self.data_for_tests['control']['HR_mean'],self.data_for_tests['subdued colors']['HR_mean']).pvalue))
-        print("HR std: " + str(scipy.stats.wilcoxon(self.data_for_tests['control']['HR_std'],self.data_for_tests['subdued colors']['HR_std']).pvalue))
-        print("HR skewness: " + str(scipy.stats.ttest_rel(self.data_for_tests['control']['HR_skewness'],self.data_for_tests['subdued colors']['HR_skewness']).pvalue))
-        print("HR kurtosis: " + str(scipy.stats.wilcoxon(self.data_for_tests['control']['HR_kurtosis'],self.data_for_tests['subdued colors']['HR_kurtosis']).pvalue))
-        print("EDA VLF: " + str(scipy.stats.ttest_rel(self.data_for_tests['control']['EDA_VLF'],self.data_for_tests['subdued colors']['EDA_VLF']).pvalue))
-        print("EDA LF: " + str(scipy.stats.ttest_rel(self.data_for_tests['control']['EDA_LF'],self.data_for_tests['subdued colors']['EDA_LF']).pvalue))
-        print("EDA HF1: " + str(scipy.stats.wilcoxon(self.data_for_tests['control']['EDA_HF1'],self.data_for_tests['subdued colors']['EDA_HF1']).pvalue))
-        print("EDA HF2: " + str(scipy.stats.wilcoxon(self.data_for_tests['control']['EDA_HF2'],self.data_for_tests['subdued colors']['EDA_HF2']).pvalue))
-        print("EDA VHF: " + str(scipy.stats.wilcoxon(self.data_for_tests['control']['EDA_VHF'], self.data_for_tests['subdued colors']['EDA_VHF']).pvalue))
-        
-        print("Busy music vs soft music")
-        print("HR mean: " + str(scipy.stats.ttest_rel(self.data_for_tests['soft music']['HR_mean'],self.data_for_tests['busy music']['HR_mean']).pvalue))
-        print("HR std: " + str(scipy.stats.ttest_rel(self.data_for_tests['soft music']['HR_std'],self.data_for_tests['busy music']['HR_std']).pvalue))
-        print("HR skewness: " + str(scipy.stats.ttest_rel(self.data_for_tests['soft music']['HR_skewness'],self.data_for_tests['busy music']['HR_skewness']).pvalue))
-        print("HR kurtosis: " + str(scipy.stats.ttest_rel(self.data_for_tests['soft music']['HR_kurtosis'],self.data_for_tests['busy music']['HR_kurtosis']).pvalue))
-        print("EDA VLF: " + str(scipy.stats.ttest_rel(self.data_for_tests['soft music']['EDA_VLF'],self.data_for_tests['busy music']['EDA_VLF']).pvalue))
-        print("EDA LF: " + str(scipy.stats.ttest_rel(self.data_for_tests['soft music']['EDA_LF'],self.data_for_tests['busy music']['EDA_LF']).pvalue))
-        print("EDA HF1: " + str(scipy.stats.wilcoxon(self.data_for_tests['soft music']['EDA_HF1'],self.data_for_tests['busy music']['EDA_HF1']).pvalue))
-        print("EDA HF2: " + str(scipy.stats.ttest_rel(self.data_for_tests['soft music']['EDA_HF2'],self.data_for_tests['busy music']['EDA_HF2']).pvalue))
-        print("EDA VHF: " + str(scipy.stats.wilcoxon(self.data_for_tests['soft music']['EDA_VHF'],self.data_for_tests['busy music']['EDA_VHF']).pvalue))'''
-'''
-    def verify_normality(self):
-        if False: #disabled for now
-            for phase,phase_values in self.data_for_tests.items():
-                for stat,stat_values in phase_values.items():
-                    result = scipy.stats.shapiro(stat_values).pvalue
-                    print(phase+' -> '+ stat + ' -> ' + str(result),end=' -> ')
-                    if result > 0.05:
-                        print("NORMAL")
-                    else:
-                        print("NOPE")'''
