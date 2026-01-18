@@ -2,7 +2,7 @@ import pandas as pd
 import os
 from scipy.signal import decimate
 import numpy as np
-path = "Data_project/ML08/biosignals/reward_in_installments.txt"
+path = "saved/ML08/biosignals/reward_in_installments.txt"
 
 #files = os.listdir(path)
 #for file in files:

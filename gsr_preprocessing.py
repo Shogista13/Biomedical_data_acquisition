@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 
-dataframe = pd.read_csv("Data_project/ML08/biosignals/unprocessed/power_up_in_installments_with_sound_effect.txt", header=None,sep = '\t').to_numpy()
+dataframe = pd.read_csv("saved/ML08/biosignals/unprocessed/power_up_in_installments_with_sound_effect.txt", header=None, sep ='\t').to_numpy()
 sos = butter(4, (0.05, 1), 'bp', output="sos", fs=1000)
 gsr = dataframe[:, 1]
 gsr_no_nan = gsr[~np.isnan(gsr)]

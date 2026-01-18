@@ -79,7 +79,7 @@ def calculate_HR_pipeline(load_path,save_path):
     show(save_path,result[1],result[6],result[0],result[5],pulse_no_nan)
     #return heart_rate
 
-path = "Data_project/ML08/biosignals/"
+path = "saved/ML08/biosignals/"
 files = os.listdir(path+"unprocessed")
 for file in files:
     calculate_HR_pipeline(path+"unprocessed/"+file,path+"graphs/"+file.replace(".txt",""))

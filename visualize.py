@@ -36,30 +36,26 @@ def patient_ID(path):
     return path[1].split('/')[-3]
 
 def comparison_test(stat0,stat1,stat_name,test_name):
-    result0 = scipy.stats.shapiro(stat0).pvalue
-    result1 = scipy.stats.shapiro(stat1).pvalue
-    print(test_name)
-    print(stat_name)
-    if result0 > 0.05 and result1 > 0.05:
-        print("Both samples normally distributed:")
-        test_result = scipy.stats.ttest_rel(stat0,stat1)
-        print("P value: " + str(test_result.pvalue))
-        print("Test statistic: " +str(test_result.statistic))
-        print("Size effect(r): " + str(math.sqrt(test_result.statistic**2/(test_result.statistic**2+test_result.df**2))))
-    else:
-        print("Nonparametric methods needed")
-        test_result = scipy.stats.wilcoxon(np.array(stat0)-np.array(stat1)) #dokladniejsze niz 2 osobne grupy, bo nie zaokragla, liczy dokladne p ale nie zwraca Z
-        print("P value: " + str(test_result.pvalue))
-        print("Test statistic: " + str(test_result.statistic))
-        print("Size effect(r): " + str(scipy.stats.wilcoxon(np.array(stat0)-np.array(stat1),method='asymptotic').zstatistic/math.sqrt(len(stat0))))
-    print("")
     plt.figure()
-    seaborn.kdeplot(stat0)
-    seaborn.kdeplot(stat1)
+    seaborn.boxplot(data = [stat0,stat1])
     plt.title(test_name + " " + stat_name)
     os.makedirs("Wykresiki/KDE_for_comparison/"+ test_name.replace(" ","_"),exist_ok=True)
     plt.savefig(("Wykresiki/KDE_for_comparison/"+ test_name + "/" + stat_name).replace(" ","_"))
     plt.close()
+    stat0 = np.array(stat0)
+    stat1 = np.array(stat1)
+    normality = scipy.stats.shapiro(stat0-stat1).pvalue
+    if normality > 0.05:
+        test_result = scipy.stats.ttest_rel(stat0,stat1)
+        s = math.sqrt((np.std(stat0)**2+np.std(stat1)**2)/2) #average std
+        cohens_d = np.mean(stat0-stat1)/s
+        return (normality,test_result.pvalue,cohens_d)
+    else:
+        test_result = scipy.stats.wilcoxon(stat0-stat1,alternative = 'greater') #dokladniejsze niz 2 osobne grupy, bo nie zaokragla, liczy dokladne p ale nie zwraca Z
+        test_result1 = scipy.stats.wilcoxon(stat0 - stat1, alternative='less')
+        number_of_ranks = test_result.statistic+test_result1.statistic
+        rank_biserial = (test_result.statistic - test_result1.statistic)/number_of_ranks
+        return (normality,test_result.pvalue,rank_biserial)
 
 class Database:
     def __init__(self):
@@ -68,6 +64,9 @@ class Database:
         self.biosignal_files = [["Data_project/" + dir + "/biosignals/" + file for file in os.listdir("Data_project/" + dir + "/biosignals")] for dir in dirs]
         self.game_files = [["Data_project/" + dir + "/unprocessed/" + file for file in os.listdir("Data_project/" + dir + "/unprocessed")] for dir in dirs]
         self.patients = [Database.Patient(self.biosignal_files[i],self.game_files[i],patient_ID(self.biosignal_files[i])) for i in range(len(self.biosignal_files))]
+        self.normality = pd.DataFrame(columns = ['HR_mean','HR_std','HR_skewness','HR_kurtosis','EDA_VLF','EDA_LF','EDA_HF1','EDA_HF2','EDA_VHF'],index = ['Control vs busy music','Control vs soft music','Control vs subdued colors','Busy music vs soft music'])
+        self.pvalues = pd.DataFrame(columns = ['HR_mean','HR_std','HR_skewness','HR_kurtosis','EDA_VLF','EDA_LF','EDA_HF1','EDA_HF2','EDA_VHF'],index = ['Control vs busy music','Control vs soft music','Control vs subdued colors','Busy music vs soft music'])
+        self.effect_sizes = pd.DataFrame(columns = ['HR_mean','HR_std','HR_skewness','HR_kurtosis','EDA_VLF','EDA_LF','EDA_HF1','EDA_HF2','EDA_VHF'],index = ['Control vs busy music','Control vs soft music','Control vs subdued colors','Busy music vs soft music'])
         self.data = self.load_data()
         self.bullet_nr_HR, self.bullet_close_HR, self.HP_HR = self.correlate()
         self.metaanalyses_of_correlations()
@@ -335,46 +334,27 @@ class Database:
                 phases[phase]["EDA_VHF"].append(self.data["EDA_PSD"][patient]["VHF"][i])
         return phases
 
+    def compare_two_groups(self,group0_name,group1_name):
+        features = ['HR_mean','HR_std','HR_skewness','HR_kurtosis','EDA_VLF','EDA_LF','EDA_HF1','EDA_HF2','EDA_VHF']
+        results = []
+        for feature in features:
+            results.append(comparison_test(self.data_for_tests[group0_name][feature], self.data_for_tests[group1_name][feature],feature, group0_name +' vs ' + group1_name))
+        results = np.array(results)
+        return results.T
+
     def test(self):
-        comparison_test(self.data_for_tests['control']['HR_mean'],self.data_for_tests['busy music']['HR_mean'],"HR mean","Control vs busy music")
-        comparison_test(self.data_for_tests['control']['HR_std'],self.data_for_tests['busy music']['HR_std'],"HR std","Control vs busy music")
-        comparison_test(self.data_for_tests['control']['HR_skewness'],self.data_for_tests['busy music']['HR_skewness'],"HR skewness","Control vs busy music")
-        comparison_test(self.data_for_tests['control']['HR_kurtosis'],self.data_for_tests['busy music']['HR_kurtosis'],"HR kurtosis","Control vs busy music")
-        comparison_test(self.data_for_tests['control']['EDA_VLF'],self.data_for_tests['busy music']['EDA_VLF'],"EDA VLF","Control vs busy music")
-        comparison_test(self.data_for_tests['control']['EDA_LF'],self.data_for_tests['busy music']['EDA_LF'],"EDA LF","Control vs busy music")
-        comparison_test(self.data_for_tests['control']['EDA_HF1'],self.data_for_tests['busy music']['EDA_HF1'],"EDA HF1","Control vs busy music")
-        comparison_test(self.data_for_tests['control']['EDA_HF2'],self.data_for_tests['busy music']['EDA_HF2'],"EDA HF2","Control vs busy music")
-        comparison_test(self.data_for_tests['control']['EDA_VHF'],self.data_for_tests['busy music']['EDA_VHF'],"EDA VHF","Control vs busy music")
-
-        comparison_test(self.data_for_tests['control']['HR_mean'], self.data_for_tests['soft music']['HR_mean'],"HR mean", "Control vs soft music")
-        comparison_test(self.data_for_tests['control']['HR_std'], self.data_for_tests['soft music']['HR_std'], "HR std","Control vs soft music")
-        comparison_test(self.data_for_tests['control']['HR_skewness'], self.data_for_tests['soft music']['HR_skewness'],"HR skewness", "Control vs soft music")
-        comparison_test(self.data_for_tests['control']['HR_kurtosis'], self.data_for_tests['soft music']['HR_kurtosis'],"HR kurtosis", "Control vs soft music")
-        comparison_test(self.data_for_tests['control']['EDA_VLF'], self.data_for_tests['soft music']['EDA_VLF'],"EDA VLF", "Control vs soft music")
-        comparison_test(self.data_for_tests['control']['EDA_LF'], self.data_for_tests['soft music']['EDA_LF'], "EDA LF","Control vs soft music")
-        comparison_test(self.data_for_tests['control']['EDA_HF1'], self.data_for_tests['soft music']['EDA_HF1'],"EDA HF1", "Control vs soft music")
-        comparison_test(self.data_for_tests['control']['EDA_HF2'], self.data_for_tests['soft music']['EDA_HF2'],"EDA HF2", "Control vs soft music")
-        comparison_test(self.data_for_tests['control']['EDA_VHF'], self.data_for_tests['soft music']['EDA_VHF'],"EDA VHF", "Control vs soft music")
-
-        comparison_test(self.data_for_tests['control']['HR_mean'], self.data_for_tests['subdued colors']['HR_mean'],"HR mean", "Control vs subdued colors")
-        comparison_test(self.data_for_tests['control']['HR_std'], self.data_for_tests['subdued colors']['HR_std'],"HR std", "Control vs subdued colors")
-        comparison_test(self.data_for_tests['control']['HR_skewness'],self.data_for_tests['subdued colors']['HR_skewness'], "HR skewness","Control vs subdued colors")
-        comparison_test(self.data_for_tests['control']['HR_kurtosis'],self.data_for_tests['subdued colors']['HR_kurtosis'], "HR kurtosis","Control vs subdued colors")
-        comparison_test(self.data_for_tests['control']['EDA_VLF'], self.data_for_tests['subdued colors']['EDA_VLF'],"EDA VLF", "Control vs subdued colors")
-        comparison_test(self.data_for_tests['control']['EDA_LF'], self.data_for_tests['subdued colors']['EDA_LF'],"EDA LF", "Control vs subdued colors")
-        comparison_test(self.data_for_tests['control']['EDA_HF1'], self.data_for_tests['subdued colors']['EDA_HF1'],"EDA HF1", "Control vs subdued colors")
-        comparison_test(self.data_for_tests['control']['EDA_HF2'], self.data_for_tests['subdued colors']['EDA_HF2'],"EDA HF2", "Control vs subdued colors")
-        comparison_test(self.data_for_tests['control']['EDA_VHF'], self.data_for_tests['subdued colors']['EDA_VHF'],"EDA VHF", "Control vs subdued colors")
-
-        comparison_test(self.data_for_tests['busy music']['HR_mean'],self.data_for_tests['soft music']['HR_mean'],"HR mean","Busy music vs soft music")
-        comparison_test(self.data_for_tests['busy music']['HR_std'],self.data_for_tests['soft music']['HR_std'],"HR std","Busy music vs soft music")
-        comparison_test(self.data_for_tests['busy music']['HR_skewness'],self.data_for_tests['soft music']['HR_skewness'],"HR skewness","Busy music vs soft music")
-        comparison_test(self.data_for_tests['busy music']['HR_kurtosis'],self.data_for_tests['soft music']['HR_kurtosis'],"HR kurtosis","Busy music vs soft music")
-        comparison_test(self.data_for_tests['busy music']['EDA_VLF'],self.data_for_tests['soft music']['EDA_VLF'],"EDA VLF","Busy music vs soft music")
-        comparison_test(self.data_for_tests['busy music']['EDA_LF'],self.data_for_tests['soft music']['EDA_LF'],"EDA LF","Busy music vs soft music")
-        comparison_test(self.data_for_tests['busy music']['EDA_HF1'],self.data_for_tests['soft music']['EDA_HF1'],"EDA HF1","Busy music vs soft music")
-        comparison_test(self.data_for_tests['busy music']['EDA_HF2'],self.data_for_tests['soft music']['EDA_HF2'],"EDA HF2","Busy music vs soft music")
-        comparison_test(self.data_for_tests['busy music']['EDA_VHF'],self.data_for_tests['soft music']['EDA_VHF'],"EDA VHF","Busy music vs soft music")
+        keys = ['Control vs busy music','Control vs soft music','Control vs subdued colors','Busy music vs soft music']
+        results = [self.compare_two_groups('control','busy music'),
+        self.compare_two_groups('control','soft music'),
+        self.compare_two_groups('control','subdued colors'),
+        self.compare_two_groups('busy music','soft music')]
+        for i,result in enumerate(results):
+            self.normality.loc[keys[i]] = result[0]
+            self.pvalues.loc[keys[i]] = result[1]
+            self.effect_sizes.loc[keys[i]] = result[2]
+        self.normality.to_csv('normality.csv')
+        self.pvalues.to_csv('pvalues.csv')
+        self.effect_sizes.to_csv('effect_sizes.csv')
 
     class Correlation2TypesOfSignals:
         def __init__(self,signals0,signals1,signal_0_time_axes,signal_1_time_axes,which_time_axis_stays,alternative,name0,name1):
