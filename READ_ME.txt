@@ -5,9 +5,9 @@ NECESSARY LIBRARIES
 -matplotlib 3.10.8
 -plotly 6.5.2
 -numpy 2.4.2
--biosspy 2.2.4
+-biosppy 2.2.4
 -seaborn 0.13.2
-Start with running -> install_dependencies.py
+Start with running -> install_dependencies.py (I hope it works, but I had all those libraries already installed)
 
 MOST IMPORTANT
 -> game.py = game
@@ -30,7 +30,7 @@ PLOTS
 -> DistributionPlots = the plots showing distributions of extracted features
 -> PlotsOfSignals = the plots of the signals we got {
 -pulse (the [1 Hz: 8 Hz] component),
--heart rate (calculated from the pulse using the bioSSPy library:
+-heart rate (calculated from the pulse using the biosppy library (the formulas are written in LaTeX):
 1. The signal is clipped: the values below 0 are set to 0.
 2. The values are squared to make the differences more visible.
 3. The algorithm computes 2 moving averages: one with a smaller window size ($W_1=111 ms$)
@@ -56,11 +56,11 @@ https://unsplash.com/photos/galaxy-wallpaper-ihbqhutI9x4
 RESULTS OF STATISTICAL TESTS
 -> normality.csv (results from Shapiro-Wilk tests)
 -> pvalues.csv (results from the Wilcoxon/paired t-test based on the normality
--> effect_sizes.csv (rank biserial correlation if Wilcoxon, Cohen's d if t-test)
+-> effect_sizes.csv (rank biserial correlation if Wilcoxon, Cohen's d if paired t-test)
 To get correlation results, it is advised to run ->data_processing.py
 
 FILES THAT WERE MEANT TO BE USED ONLY A FEW TIMES TO DOWNSAMPLE/DELETE/PROCESS SOMETHING ONCE AND DO
 NOT NEED TO BE READ OR OLD PLOTS
-(Are in -> FilewNotNecessary.zip, no need to check those)
+(Are in -> FilesNotNecessary.zip, no need to check those)
 -> img_processing.py = modifying the sprite color by swapping the color channels (enemy bullets to player bullets)
 -> downsample.py = downsampling

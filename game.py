@@ -4,32 +4,32 @@ import math
 
 class Game:
     def __init__(self,period,speed,HP,bullet_relative_speed,bullet_targeting,power_up_strength,power_up_gradually,power_up_risky_time,power_up_animated,subdued_colors,music):
-        pygame.init()#initializes the library
+        pygame.init()# initializes the library
         pygame.font.init()
-        self.font = pygame.font.Font(None, 80)#creates the font to render text
-        self.music = False#no music by default
+        self.font = pygame.font.Font(None, 80)# creates the font to render text
+        self.music = False# no music by default
 
-        if power_up_animated:#one of the game modes,power_up_in_installments_with_sound_effect
+        if power_up_animated:# one of the gamemodes: power_up_in_installments_with_sound_effect
             pygame.mixer.init()
             self.collection_sound = pygame.mixer.Sound("Game_music/powerup.wav")
             self.collection_sound.set_volume(0.08)
-        elif music == 1: #busy music
+        elif music == 1: # busy music
             self.music =  pygame.mixer.Sound("Game_music/busy theme 2.wav")
             self.music.set_volume(0.08)
             self.music.play(-1)
-        elif music == 2:#soft music
+        elif music == 2:# soft music
             self.music =  pygame.mixer.Sound("Game_music/softmusic2.wav")
             self.music.set_volume(0.08)
             self.music.play(-1)
 
-        info = pygame.display.Info()#to set the width and height
+        info = pygame.display.Info()# to set the width and height
         self.width = info.current_w
         self.height = info.current_h
         self.surface = pygame.display.set_mode((self.width, self.height), pygame.FULLSCREEN)
 
         self.subdued_colors = subdued_colors
         self.player_sprite = "Sprites_and_backgrounds/Player"+str(int(subdued_colors))+".gif"
-        #int(bool) is 1 for true and 0 for false. Then str to concatenate
+        # int(bool) is 1 for true and 0 for false. Then str to concatenate
         self.enemy_sprite = "Sprites_and_backgrounds/Enemy"+str(int(subdued_colors))+".gif"
         self.enemy_bullet_sprite = "Sprites_and_backgrounds/EnemyBullet"+str(int(subdued_colors))+".gif"
         self.player_bullet_sprite = "Sprites_and_backgrounds/PlayerBullet"+str(int(subdued_colors))+".gif"
@@ -37,53 +37,53 @@ class Game:
         self.background = pygame.image.load("Sprites_and_backgrounds/Background"+str(int(subdued_colors))+".jpg").convert()
 
         self.time = 0
-        self.points = 0#they were not saved to the csv
+        self.points = 0# they were not saved to the csv
         self.enemies = []
         self.enemy_bullets = []
         self.player_bullets = []
         self.player = Game.Player(self)
         self.max_HP = HP
 
-        self.bullet_targeting = bullet_targeting#alpha in Formulas.png
-        self.bullet_relative_speed = bullet_relative_speed#gamma in Formulas.png
-        self.period = period#the time in frames between enemies shooting the bullets'spawning
-        self.speed = speed#beta in Formulas.png
+        self.bullet_targeting = bullet_targeting# alpha in Formulas.png
+        self.bullet_relative_speed = bullet_relative_speed# gamma in Formulas.png
+        self.period = period# the time in frames between enemies shooting the bullets' spawning
+        self.speed = speed# beta in Formulas.png
         self.max_enemies = 5
         self.HP = HP
 
-        self.power_up = Game.PowerUp(self)#it is the medkit
-        self.power_up_strength = power_up_strength#amount of HP it gives
-        self.power_up_gradually = power_up_gradually#if the HP is given instantly or in installments
-        self.power_up_risky_time = power_up_risky_time#the medkit makes alpha and beta higher
-        #and the period lower for a few seconds
-        self.power_up_animated = power_up_animated#sound every second for a few seconds
-        self.enemies_boundary = 2*self.height // 3#pygame counts y direction from the
-        #top like in a matrix so it makes an invisible boundary at 1/3 of the screen from the bottom
+        self.power_up = Game.PowerUp(self)# it is the medkit
+        self.power_up_strength = power_up_strength# amount of HP it gives
+        self.power_up_gradually = power_up_gradually# if the HP is given instantly or in installments
+        self.power_up_risky_time = power_up_risky_time# the medkit makes alpha and beta higher
+        # and the period lower for a few seconds
+        self.power_up_animated = power_up_animated# sound every second for a few seconds
+        self.enemies_boundary = 2*self.height // 3# pygame counts y direction from the
+        # top like in a matrix so it makes an invisible boundary at 1/3 of the screen from the bottom
 
-    def display_HP(self):#displays HP
+    def display_HP(self):# displays HP
         text = self.font.render(f'HP: {self.HP}', True,(255,255,255))
         textRect = text.get_rect()
         textRect.center = (textRect.width// 2 + 25, textRect.height// 2 + 50)
         self.surface.blit(text,textRect)
 
-    def display_time(self):#displays the time (because of the 100 FPS in the code and my laptop
-        #not working fast enough, it is around 2 times slower than real time
+    def display_time(self):# displays the time (because of the 100 FPS in the code and my laptop
+        # not working fast enough, it is around 2 times slower than real time
         text = self.font.render(f'Time: {self.time // 100}', True, (255, 255, 255))
         textRect = text.get_rect()
         textRect.center = (textRect.width // 2 + 25, textRect.height // 2 + 140)
         self.surface.blit(text, textRect)
 
-    def display_points(self):#we are not doing anything with them later
+    def display_points(self):# we are not doing anything with them later
         text = self.font.render(f'Points: {self.points}', True, (255, 255, 255))
         textRect = text.get_rect()
         textRect.center = (textRect.width // 2 + 25, textRect.height // 2 + 230)
         self.surface.blit(text, textRect)
 
-    def spawn_enemies(self):#spawns enemies
+    def spawn_enemies(self):# spawns enemies
         if self.time % self.period == 0 and len(self.enemies) < self.max_enemies:
             self.enemies.append(Game.Enemy(self,random.randint(50, self.width - 50), random.randint(self.enemies_boundary, self.enemies_boundary + self.height//3)))
 
-    def death(self):#a white screen for 10 seconds, then respawn
+    def death(self):# a white screen for 10 seconds, then respawn
         time_till_respawn = 10
         if self.music != False:
             self.music.stop()
@@ -102,7 +102,7 @@ class Game:
         if self.music != False:
             self.music.stop()
 
-    def move_objects(self):#moves the player, sprites and bullets, makes the game run
+    def move_objects(self):# moves the player, sprites and bullets, makes the game run
         self.player.move()
         self.power_up.spawn_or_collect()
         for enemy in self.enemies:
@@ -115,7 +115,7 @@ class Game:
         self.player_bullets = [bullet for bullet in self.player_bullets if not bullet.to_delete]
         self.time += 1
 
-    def draw_objects(self):#draws the objects every frame
+    def draw_objects(self):# draws the objects every frame
         self.surface.blit(self.background, (0, 0))
         if self.power_up.exists:
             self.surface.blit(self.power_up.image,self.power_up.rect)
@@ -131,15 +131,15 @@ class Game:
         self.display_points()
 
     def change_difficulty(self, speed, bullet_targeting, bullet_relative_speed):
-        #was meant for biofeedback but we have not done that in the end, might be a future update,
-        #because there is an idea to use an IMU sensor to detect unintentional movement as a
-        #stress indicator and the IMU actually works
+        # was meant for biofeedback but we have not done that in the end, might be a future update,
+        # because there is an idea to use an IMU sensor to detect unintentional movement as a
+        # stress indicator and the IMU actually works
         self.speed = speed
         self.bullet_targeting = bullet_targeting
         self.bullet_relative_speed = bullet_relative_speed
 
-    def play(self):#just gathers all those methods into a single one to make it look
-        #cleaner from outside
+    def play(self):# just gathers all those methods into a single one to make it look
+        # cleaner from outside
         self.spawn_enemies()
         self.move_objects()
         self.draw_objects()
@@ -148,7 +148,7 @@ class Game:
         pygame.display.update()
         pygame.time.delay(10)
 
-    class GameObject:#bullets,player,enemies and the med kit all inherit everything from this class
+    class GameObject:# bullets,player,enemies and the med kit all inherit everything from this class
         def __init__(self, game_instance, x, y,sprite_path):
             self.sprite_path = sprite_path
             self.image = pygame.image.load(self.sprite_path).convert_alpha()
@@ -160,7 +160,7 @@ class Game:
             self.speed_x = 0
             self.speed_y = 0
 
-        def rotate(self):#rotates the objects in the direction of movement
+        def rotate(self):# rotates the objects in the direction of movement
             self.image = pygame.image.load(self.sprite_path).convert()
             x = self.rect.x
             y = self.rect.y
@@ -175,7 +175,7 @@ class Game:
             self.rect.x = x
             self.rect.y = y
 
-    class PowerUp:#medkit
+    class PowerUp:# medkit
         def __init__(self,game_instance):
             self.game_instance = game_instance
             self.sprite_number = 0
@@ -187,17 +187,17 @@ class Game:
             self.exists = False
             self.time_since_last_collection = 0
 
-        def spawn_or_collect(self):#interactions
+        def spawn_or_collect(self):# interactions
             if (self.game_instance.time - self.time_since_last_collection) <= 100*self.game_instance.power_up_strength and self.game_instance.power_up_gradually and self.game_instance.time > 100*self.game_instance.power_up_strength:
-                self.heal_gradually()#if the healing in that gamemode is in installments
+                self.heal_gradually()# if the healing in that gamemode is in installments
             if self.mask.overlap(self.game_instance.player.mask,(self.rect.x-self.game_instance.player.rect.x,self.rect.y-self.game_instance.player.rect.y)) and self.exists:
-                self.collected()#just collect if there is a collision
+                self.collected()# just collect if there is a collision
             elif not self.exists and self.game_instance.time - self.time_since_last_collection == self.game_instance.power_up_risky_time:
-                self.restore_difficulty()#after the "risky time" the alpha,beta and period go back to normal
+                self.restore_difficulty()# after the "risky time" the alpha,beta and period go back to normal
             elif not self.exists and self.game_instance.time - self.time_since_last_collection == 3000:
-                self.exists = True#respawns
+                self.exists = True# respawns
 
-        def collected(self):#collection of the medkit
+        def collected(self):# collection of the medkit
             if self.exists and self.game_instance.time - self.time_since_last_collection > 110:
                 self.exists = False
                 self.time_since_last_collection = self.game_instance.time
@@ -207,19 +207,19 @@ class Game:
                 if not self.game_instance.power_up_gradually and not self.game_instance.power_up_animated:
                     self.game_instance.HP += self.game_instance.power_up_strength
 
-        def heal_gradually(self):#heals in intsallments, makes the sound in 1 gamemode
+        def heal_gradually(self):# heals in intsallments, makes the sound in 1 gamemode
             if (self.game_instance.time - self.time_since_last_collection)%100 == 0 and self.game_instance.time - self.time_since_last_collection<= self.game_instance.power_up_strength * 100:
                 self.game_instance.HP += 1
                 if self.game_instance.power_up_animated:
                     self.game_instance.collection_sound.play()
 
-        def restore_difficulty(self):#restores the difficulty after the "risky time"
+        def restore_difficulty(self):# restores the difficulty after the "risky time"
             self.game_instance.bullet_targeting -= 0.0025
             self.game_instance.bullet_relative_speed -= 0.1
             self.game_instance.period += 10
 
-        #we did not get the animation before starting the measurements
-        #and we did not modify the game after the measurements have started
+        # we did not get the animation before starting the measurements
+        # and we did not modify the game after the measurements have started
         '''def play_animation(self):
             if self.game_instance.time - self.time_since_last_collection > 100:
                 self.exists = False
@@ -228,13 +228,13 @@ class Game:
                 self.sprite_number %= 10
                 self.image = pygame.image.load(self.game_instance.power_up_sprite + str(self.sprite_number)+".gif").convert()'''
 
-    class Sprite(GameObject):#enemies and the player inherit from this class
+    class Sprite(GameObject):# enemies and the player inherit from this class
         def __init__(self, game_instance, x, y, sprite_path):
             super().__init__(game_instance, x, y, sprite_path)
             self.direction = (0, 0)
 
         def calculate_speed(self):
-            if isinstance(self, Game.Enemy):#this is one of the formulas from Formulas.png
+            if isinstance(self, Game.Enemy):# this is one of the formulas from Formulas.png
                 basic_component = (2 * (int(((self.game_instance.time + 50) / 100)) % 2) - 1) * self.game_instance.speed // 10
                 chaotic_component_x = int(4 * math.sin(2 * math.pi * self.rect.x))
                 chaotic_component_y = int(4 * math.sin(2 * math.pi * self.rect.y))
@@ -244,7 +244,7 @@ class Game:
                 self.speed_x += (basic_component + chaotic_component_x + centralizing_component_x)
                 self.speed_y += (basic_component + chaotic_component_y + centralizing_component_y)
                 self.direction = (self.speed_x // 50, self.speed_y // 50)
-            elif isinstance(self, Game.Player):#just on the direction of the mouse
+            elif isinstance(self, Game.Player):# just on the direction of the mouse
                 mouse_position = pygame.mouse.get_pos()
                 delta_x = mouse_position[0] - self.rect.centerx
                 delta_y = mouse_position[1] - self.rect.centery
@@ -252,22 +252,22 @@ class Game:
                 if speed_magnitude > 40:
                     self.speed_x = delta_x / math.sqrt(delta_x ** 2 + delta_y ** 2 + 1)
                     self.speed_y = delta_y / math.sqrt(delta_x ** 2 + delta_y ** 2 + 1)
-                else:#it the mouse is too close, the player stops, because otherways he/she would
-                    #catch up to the mouse and go back and forth
+                else:# it the mouse is too close, the player stops, because otherways he/she would
+                    # catch up to the mouse and go back and forth
                     self.speed_x = 0
                     self.speed_y = 0
-                #cast into int because the position needs to be an int
+                # cast into int because the position needs to be an int
                 self.direction = (int(self.game_instance.speed * self.speed_x), int(self.game_instance.speed * self.speed_y))
 
         def move(self):
             self.calculate_speed()
-            self.rect.move_ip(*self.direction)#ip = in place, doesn't create a new object
-            self.bound()#stop the player/enemy at the boundary
+            self.rect.move_ip(*self.direction)# ip = in place, doesn't create a new object
+            self.bound()# stop the player/enemy at the boundary
             self.rotate()
             if isinstance(self,Game.Enemy) and self.game_instance.time % self.game_instance.period == 0 and self.game_instance.time > 500:
-                self.shoot()#every int(period) frames, the enemies shoot
+                self.shoot()# every int(period) frames, the enemies shoot
             elif isinstance(self, Game.Player) and self.game_instance.time - self.last_shot > 100 and pygame.mouse.get_pressed()[0]:
-                self.shoot()#every 100 frames, the player shoots after left mouse click
+                self.shoot()# every 100 frames, the player shoots after left mouse click
 
         def shoot(self):
             bullet_x = self.rect.centerx
@@ -278,7 +278,7 @@ class Game:
                 self.game_instance.player_bullets.append(Game.PlayerBullet(self.game_instance, bullet_x, bullet_y))
                 self.last_shot = self.game_instance.time
 
-        def bound(self):#stop the player/enemy at the boundary
+        def bound(self):# stop the player/enemy at the boundary
             self.rect.x = min(max(0, self.rect.x), self.game_instance.width - self.rect.width)
             if isinstance(self, Game.Enemy):
                 self.rect.y = min(max(self.game_instance.enemies_boundary, self.rect.y),
@@ -302,7 +302,7 @@ class Game:
             self.spawn_time = game_instance.time
             self.to_delete = False
 
-        def delete(self):#deletes old/out of bounds bullets
+        def delete(self):# deletes old/out of bounds bullets
             if self.game_instance.time-self.spawn_time == 800:
                 self.to_delete = True
             if not (0 < self.rect.x <= self.game_instance.width) :
@@ -312,7 +312,7 @@ class Game:
 
         def move(self):
             closest_enemy = self.find_closest_enemy()
-            #formula from the Formulas.png
+            # formula from the Formulas.png
             self.speed_x = ( 1 - self.game_instance.bullet_targeting) * self.speed_x + self.game_instance.bullet_targeting * (closest_enemy[0] - self.rect.centerx)
             self.speed_y = (1 - self.game_instance.bullet_targeting) * self.speed_y + self.game_instance.bullet_targeting * (closest_enemy[1] - self.rect.centery)
             self.normalizer = self.game_instance.bullet_relative_speed * self.game_instance.speed / (math.sqrt(self.speed_x ** 2 + self.speed_y ** 2) + 1)
@@ -322,7 +322,7 @@ class Game:
             self.check_for_collisions()
             self.rotate()
 
-        def find_closest_enemy(self):#finds the bullet target to home to
+        def find_closest_enemy(self):# finds the bullet target to home to
             if isinstance(self, Game.PlayerBullet):
                 enemies = [(enemy.rect.centerx,enemy.rect.centery) for enemy in self.game_instance.enemies]
                 enemies.sort(key = lambda enemy:(enemy[0]-self.rect.centerx)**2+(enemy[1]-self.rect.centery)**2)
@@ -333,7 +333,7 @@ class Game:
             elif isinstance(self, Game.EnemyBullet):
                 return (self.game_instance.player.rect.centerx, self.game_instance.player.rect.centery)
 
-        def check_for_collisions(self):#checks for enemies/player hit
+        def check_for_collisions(self):# checks for enemies/player hit
             if isinstance(self, Game.PlayerBullet):
                 collisions = [enemy for enemy in self.game_instance.enemies if self.mask.overlap(enemy.mask,(enemy.rect.x-self.rect.x,enemy.rect.y-self.rect.y))]
                 if collisions:

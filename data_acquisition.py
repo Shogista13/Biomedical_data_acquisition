@@ -11,6 +11,7 @@ class Data:
         self.df = pd.DataFrame(columns=column_titles)
 
     def get_data(self,player,enemies,enemy_bullets, player_bullets,HP,power_up,time):
+        # gets the data from the game and stores it in a pandas dataframe
         player_x = player.rect.x
         player_y = player.rect.y
         player_speed_x = player.direction[0]
@@ -27,9 +28,11 @@ class Data:
         enemy_bullet_y = [bullet.rect.y for bullet in enemy_bullets]
         enemy_bullet_speed_x = [bullet.direction[0] for bullet in enemy_bullets]
         enemy_bullet_speed_y = [bullet.direction[1] for bullet in enemy_bullets]
+        # creates a new row and assigns values
         self.df.loc[len(self.df)] = [time,HP,power_up, player_x, player_y, player_speed_x, player_speed_y,player_bullet_x,player_bullet_y,
                                      player_bullet_speed_x,player_bullet_speed_y,enemy_x, enemy_y, enemy_speed_x,
                            enemy_speed_y, enemy_bullet_x, enemy_bullet_y, enemy_bullet_speed_x, enemy_bullet_speed_y]
 
     def save_data(self):
+        # saves the data into a csv
         pd.DataFrame.to_csv(self.df, self.path +'/unprocessed/' + self.phase)

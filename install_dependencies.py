@@ -1,7 +1,7 @@
 import subprocess
 import sys
 
-required_libraries = ["scipy", "numpy", "matplotlib","pandas","seaborn","pygame","plotly","biosspy"]
+required_libraries = ["scipy", "numpy", "matplotlib","pandas","seaborn","pygame","plotly","biosppy","setuptools"]
 
 for lib in required_libraries:
     try:
