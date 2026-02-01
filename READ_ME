@@ -1,0 +1,66 @@
+NECESSARY LIBRARIES
+-pygame 2.6.1
+-scipy 1.17.0
+-pandas 2.3.3
+-matplotlib 3.10.8
+-plotly 6.5.2
+-numpy 2.4.2
+-biosspy 2.2.4
+-seaborn 0.13.2
+Start with running -> install_dependencies.py
+
+MOST IMPORTANT
+-> game.py = game
+-> data_acquisition.py = saving the data from the game into a csv
+-> main.py = main
+-> get_subject_data.py = questionaire
+-> data_processing.py = signal filtering, feature extraction and statistics
+
+THE MEASUREMENT RESULTS
+-> DataExcludedFromAnalysis = outlier excluded from the analysis and 1 person with incomplete measurements
+-> Data_project -> XXXX -> biosignals = raw signals
+-> Data_project -> XXXX -> unprocessed = data from the game
+-> Data_project -> XXXX -> subject_data = age, hours of games played weekly, sex, screen resolution etc.
+
+TO MAKE READING EASIER
+-> Formulas.png
+-> Gamemodes.png
+
+PLOTS
+-> DistributionPlots = the plots showing distributions of extracted features
+-> PlotsOfSignals = the plots of the signals we got {
+-pulse (the [1 Hz: 8 Hz] component),
+-heart rate (calculated from the pulse using the bioSSPy library:
+1. The signal is clipped: the values below 0 are set to 0.
+2. The values are squared to make the differences more visible.
+3. The algorithm computes 2 moving averages: one with a smaller window size ($W_1=111 ms$)
+to detect peaks, and one with a bigger window size ($W_2=667 ms$, the result is MA_{BEAT})
+to compute an adaptive threshold
+($\bar{z}$ is the mean of the squared signal:
+THR_1 = MA_{BEAT} + 0.02\bar{z}
+THR_2 = W_1 (the peaks spaces less that 111 ms apart are ignored)
+https://doi.org/10.1371/journal.pone.0076585
+-EDA (the [0.05 Hz: 0.5 Hz] component)
+-the number of bullets
+-the inverse of the harmonic mean of the distances from the bullets
+-Player's HP
+}
+
+SPRITES AND MUSIC
+-> Sprites_and_backgrounds = all images used in the game, sprites (designed by our independent artist)
+and the backgrounds:
+https://portalmmo.pl/galeria/ogame,192,0.html
+https://unsplash.com/photos/galaxy-wallpaper-ihbqhutI9x4
+-> Game_music = game music
+
+RESULTS OF STATISTICAL TESTS
+-> normality.csv (results from Shapiro-Wilk tests)
+-> pvalues.csv (results from the Wilcoxon/paired t-test based on the normality
+-> effect_sizes.csv (rank biserial correlation if Wilcoxon, Cohen's d if t-test)
+To get correlation results, it is advised to run ->data_processing.py
+
+FILES THAT WERE MEANT TO BE USED ONLY A FEW TIMES TO DOWNSAMPLE/DELETE/PROCESS SOMETHING ONCE AND DO
+NOT NEED TO BE READ OR OLD PLOTS
+(Are in -> FilewNotNecessary.zip, no need to check those)
+-> img_processing.py = modifying the sprite color by swapping the color channels (enemy bullets to player bullets)
+-> downsample.py = downsampling

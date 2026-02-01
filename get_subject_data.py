@@ -3,32 +3,32 @@ from tkinter import *
 import pygame
 import os
 
-class Form:
+class Form:#it is not pretty but it works
     def __init__(self):
         pygame.init()
         info = pygame.display.Info()
         self.width = info.current_w
         self.height = info.current_h
-        self.root = Tk()
+        self.root = Tk() #instantiates the window
         self.root.title("Subject data")
         self.root.geometry("295x300")
         self.root.config(bg="grey")
         self.gender = StringVar(self.root, "0")
         self.path = ""
 
-        self.entry0 = Entry(self.root,width=15)
+        self.entry0 = Entry(self.root,width=15)#creates the place to write the ID
         Label(self.root, text="1 letter of the name\n 1 letter of the surname\nmonth (e.q. 01 for January)\nAll uppercase", bg="grey").grid(row=0, column=0)
         self.entry0.grid(row=1, column=0, ipadx=100)
 
-        self.entry1 = Entry(self.root,width=15)
+        self.entry1 = Entry(self.root,width=15)#creates the place to write the age
         Label(self.root, text="Age", bg="grey").grid(row=2, column=0)
         self.entry1.grid(row=3, column=0, ipadx=100)
 
-        self.entry2 = Entry(self.root,width=15)
+        self.entry2 = Entry(self.root,width=15)#creates the place to write the hours played weekly
         Label(self.root, text="Hours of computer\n games per week", bg="grey").grid(row=4, column=0)
         self.entry2.grid(row=5, column=0, ipadx=100)
 
-        Label(self.root, text="Gender", bg="grey").grid(row=6, column=0)
+        Label(self.root, text="Gender", bg="grey").grid(row=6, column=0)#creates the place to choose the sex
         sexes = {"Female":"F",
                  "Male":"M"}
         for i,(text, value) in enumerate(sexes.items()):
@@ -38,7 +38,7 @@ class Form:
         Button(self.root, text="Submit", fg="black", bg="red", command=self.save_data).grid(row=9, column=0)
         self.root.mainloop()
 
-    def save_data(self):
+    def save_data(self): #saves the entered data + screen resolution to a csv
         self.path = "Data_project/"+self.entry0.get()
         subject_data = {
                 "Age":[self.entry1.get()],
@@ -52,5 +52,4 @@ class Form:
             os.makedirs(self.path)
             pd.DataFrame.to_csv(df, self.path+"/subject_data")
             os.makedirs(self.path+"/unprocessed")
-            os.makedirs(self.path+"/processed")
         self.root.destroy()
