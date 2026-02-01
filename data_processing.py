@@ -90,14 +90,14 @@ class Database:
                 fig.add_trace(go.Scatter(x=eda_time_axis,y=eda, name="EDA"), row=3, col=1)
 
                 game_time_axes = self.game_data.time[column] # the real-world time during the game
-                #those sharp cliffs in the plots of the game data mean deaths (there aren't any measurements during this time)
+                # those sharp cliffs in the plots of the game data mean deaths (there aren't any measurements during this time)
                 HP = self.game_data.HP[column] # HP
                 fig.add_trace(go.Scatter(x=game_time_axes,y=HP, name="HP"), row=4, col=1)
 
-                nr_of_bullets = self.game_data.bullet_nr[column] #bullet number
+                nr_of_bullets = self.game_data.bullet_nr[column] # bullet number
                 fig.add_trace(go.Scatter(x=game_time_axes,y=nr_of_bullets, name="Number of bullets"), row=5, col=1)
 
-                distance_from_bullets = self.game_data.bullet_close[column] #the inverse of the harmonic mean of the distances to bullets
+                distance_from_bullets = self.game_data.bullet_close[column] # the inverse of the harmonic mean of the distances to bullets
                 fig.add_trace(go.Scatter(x=game_time_axes, y=distance_from_bullets, name="Distance from bullets"), row=6, col=1)
 
                 fig.write_html("PlotsOfSignals/"+self.patient_name+"/"+nazwy[column]+".html")
